@@ -10,7 +10,7 @@ import("@monaco-editor/react");
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'HocCode.io - Code Để Học',
+    title: 'HocCode - Code Để Học',
     description: 'Nền tảng hỗ trợ học lập trình',
 };
 

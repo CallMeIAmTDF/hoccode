@@ -37,7 +37,7 @@ export function Header() {
                 <div className="flex items-center gap-8">
                     <Link href="/" className="flex items-center gap-2 group">
                         <Code2 className="h-6 w-6 text-blue-700 group-hover:scale-110 transition-transform"/>
-                        <span className="text-xl font-bold text-foreground">HocCode.io</span>
+                        <span className="text-xl font-bold text-foreground">HocCode</span>
                     </Link>
 
                     <nav className="hidden md:flex items-center gap-1 relative">

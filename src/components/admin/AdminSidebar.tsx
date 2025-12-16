@@ -21,7 +21,7 @@ const AdminSidebar: React.FC = () => {
     return (
         <div className="flex flex-col h-full p-4">
             <div className="mb-8 text-2xl font-bold text-red-600">
-                HocCode.io
+                HocCode
             </div>
             <nav className="flex-1 space-y-2">
                 {navItems.map((item) => {

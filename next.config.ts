@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
         // tắt refresh overlay khi gặp lỗi params
         maxInactiveAge: 1000 * 60 * 60,
     },
+    // output: 'export',
+    images: {
+        unoptimized: true
+    },
     webpack(config) {
         config.ignoreWarnings = [
             {

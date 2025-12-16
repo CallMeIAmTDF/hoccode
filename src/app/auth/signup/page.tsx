@@ -111,7 +111,7 @@ export default function SignUpPage() {
                 <div className="text-center mb-8">
                     <Link href="/public" className="inline-flex items-center space-x-2 mb-4">
                         <Code2 className="h-8 w-8 text-blue-600" />
-                        <span className="text-2xl font-bold text-slate-900">HocCode.io</span>
+                        <span className="text-2xl font-bold text-slate-900">HocCode</span>
                     </Link>
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">Đăng Ký Tài Khoản</h1>
                 </div>
