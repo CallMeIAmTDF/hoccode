@@ -95,7 +95,7 @@ function transformApiStats(apiData: ApiStat[]): UiStat[] {
                 uiTitle = "Cuộc thi đã tổ chức";
                 break;
             case "reports":
-                uiTitle = "Báo cáo chưa xử lý";
+                uiTitle = "Báo cáo";
                 break;
             default:
                 uiTitle = item.title;

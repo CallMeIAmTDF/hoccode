@@ -1,6 +1,6 @@
 import {notify} from "@/components/notify";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export interface ApiResponse<T> {
     code: number;
@@ -11,6 +11,8 @@ export interface ApiResponse<T> {
 function handleUnauthorized(code: number) {
     if (code === 401 || code === 99999) {
         localStorage.clear();
+        localStorage.setItem('hasSeenOnboarding', 'true');
+        localStorage.setItem('hasSeenLearnProblemOnboarding', 'true')
     }
 }
 
@@ -76,6 +78,8 @@ async function handleFetch<T>(fetchFn: () => Promise<Response>): Promise<T> {
                 description: "Vui lòng đăng nhập để tiếp tục"
             });
             localStorage.clear();
+            localStorage.setItem('hasSeenOnboarding', 'true');
+            localStorage.setItem('hasSeenLearnProblemOnboarding', 'true')
             window.location.href = "/auth/signin";
         } else {
             // notify("error", {

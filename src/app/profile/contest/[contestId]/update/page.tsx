@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useEffect, useState} from "react"
+import React, {use, useEffect, useState} from "react"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
@@ -39,13 +39,10 @@ const CATEGORIES = [
     "STRONGLY_CONNECTED_COMPONENT", "EULERIAN_CIRCUIT", "RADIX_SORT", "REJECTION_SAMPLING",
     "BICONNECTED_COMPONENT"
 ]
-type PageProps = {
-    params: Promise<{
-        contestId: string;
-    }>;
-};
-export default async function UpdateContestPage({ params }: PageProps) {
-    const { contestId } = await params;
+
+export default function UpdateContestPage({params}: { params: Promise<{ contestId: string }> }) {
+    const unwrappedParams = use(params);
+    const contestId = unwrappedParams.contestId;
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
     const [password, setPassword] = useState("")

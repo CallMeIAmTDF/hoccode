@@ -1,6 +1,6 @@
 'use client';
 
-import { VideoCallRoom } from '@/app/test/call/[roomId]/VideoCallRoom';
+import { VideoCallRoom } from '@/app/interview/call/[roomId]/VideoCallRoom';
 import { useParams, useRouter } from 'next/navigation';
 
 export default function CallPage() {
@@ -11,7 +11,7 @@ export default function CallPage() {
     return (
         <VideoCallRoom
             roomId={roomId}
-            onLeave={() => router.push('/test')}
+            onLeave={() => router.push('/interview')}
         />
     );
 }

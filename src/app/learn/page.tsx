@@ -13,6 +13,8 @@ import {notify} from "@/components/notify";
 import {useWebsocket} from "next/dist/client/dev/hot-reloader/app/use-websocket";
 import {useSocket} from "@/context/SocketProvider";
 import {StreakNotification} from "@/components/animation/StreakNotification";
+import {OnboardingTour} from "@/components/guidetour/OnboardingTour";
+import {learnPageSteps} from "@/lib/onboard/steps";
 
 
 interface FilterState {
@@ -37,6 +39,27 @@ export default function LearnPage() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>([])
     const [loading, setLoading] = useState(true)
     const router = useRouter();
+    const [runTour, setRunTour] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (!isMounted) return;
+
+        const hasSeenTour = localStorage.getItem('hasSeenOnboarding');
+        if (!hasSeenTour || hasSeenTour === 'false') {
+            const timer = setTimeout(() => {
+                setRunTour(true);
+                localStorage.setItem('hasSeenOnboarding', 'true');
+
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [isMounted]);
+
 
     useEffect(() => {
         async function fetchProblem() {
@@ -101,6 +124,10 @@ export default function LearnPage() {
     const handleProblemClick = (problemId: number) => {
         router.push(`/learn/${problemId}`)
     }
+    const handleTourFinish = () => {
+        setRunTour(false);
+        localStorage.setItem('hasSeenOnboarding', 'true');
+    };
 
     const handleRandomProblemClick = async () => {
         try {
@@ -116,6 +143,7 @@ export default function LearnPage() {
 
     return (
         <div className="min-h-screen bg-background">
+            {isMounted && <OnboardingTour run={runTour} onFinish={handleTourFinish} steps={learnPageSteps}/>}
             <Header/>
             <div className="container mx-auto max-w-7xl px-4 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

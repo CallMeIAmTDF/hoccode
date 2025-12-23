@@ -26,53 +26,7 @@ interface Contest {
 
 export default function ContestListPage() {
     const [search, setSearch] = useState("")
-    const [contests, setContests] = useState<Contest[]>([
-        {
-            id: 4,
-            title: "thaidangfa@gmail.com 123",
-            description: "thaidangfa@gmail.com 123",
-            numAttendees: 0,
-            maxAttendees: 999999,
-            startTime: "2025-09-11T21:59:00",
-            endTime: "2025-09-13T00:53:00",
-            deleted: false,
-            isEditable: true,
-        },
-        {
-            id: 3,
-            title: "thaidangfa@gmail.com",
-            description: "thaidangfa@gmail.com",
-            numAttendees: 0,
-            maxAttendees: 999999,
-            startTime: "2025-09-11T14:46:00",
-            endTime: "2025-09-12T14:44:00",
-            deleted: false,
-            isEditable: true,
-        },
-        {
-            id: 2,
-            title: "thaidangfa@gmail.com",
-            description: "thaidangfa@gmail.com",
-            numAttendees: 0,
-            maxAttendees: 999999,
-            startTime: "2025-09-11T14:14:00",
-            endTime: "2025-09-13T14:11:00",
-            deleted: false,
-            isEditable: false,
-        },
-        {
-            id: 1,
-            title: "September Coding Contest 2025",
-            description:
-                "A monthly programming contest with algorithmic and data structure problems.",
-            numAttendees: 1,
-            maxAttendees: 256,
-            startTime: "2025-09-08T12:00:00",
-            endTime: "2025-09-15T12:00:00",
-            deleted: false,
-            isEditable: true,
-        },
-    ])
+    const [contests, setContests] = useState<Contest[]>([])
 
     const router = useRouter()
 

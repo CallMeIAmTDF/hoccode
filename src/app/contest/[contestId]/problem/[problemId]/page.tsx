@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useEffect, useMemo, useState} from "react"
+import React, {use, useEffect, useMemo, useState} from "react"
 import {useRouter} from "next/navigation"
 import dynamic from "next/dynamic"
 import {Button} from "@/components/ui/button"
@@ -25,15 +25,11 @@ import {notify} from "@/components/notify";
 import {Spinner} from "@/components/ui/shadcn-io/spinner";
 
 // const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {ssr: false})
-type PageProps = {
-    params: Promise<{
-        contestId: string;
-        problemId: string;
-    }>;
-};
-export default async function LearnProblemPage({ params }: PageProps) {
-    const { contestId, problemId } = await params;
 
+export default function LearnProblemPage({params}: { params: Promise<{ problemId: string, contestId: string }> }) {
+    const unwrappedParams = use(params);
+    const contestId = unwrappedParams.contestId;
+    const problemId = unwrappedParams.problemId
     const router = useRouter()
     const [authed, setAuthed] = useState<null | boolean>(null)
     const [tab, setTab] = useState<"problem" | "result">("problem")

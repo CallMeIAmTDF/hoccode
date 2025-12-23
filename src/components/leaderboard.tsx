@@ -36,7 +36,7 @@ const getPointsBadgeColor = (points: number) => {
 
 export function Leaderboard({ users }: LeaderboardProps) {
     return (
-        <Card className="h-fit min-h-[330px] gap-1">
+        <Card className="h-fit min-h-[330px] gap-1" id="tour-leaderboard">
             <CardHeader className="pb-1">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-blue-700" />

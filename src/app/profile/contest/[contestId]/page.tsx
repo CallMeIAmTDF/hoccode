@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {useState, useEffect, useMemo, use} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -88,8 +88,9 @@ type PageProps = {
     }>;
 };
 
-export default async function ContestLeaderboard({ params }: PageProps){
-    const { contestId } = await params;
+export default function ContestLeaderboard({params}: { params: Promise<{ contestId: string }> }){
+    const unwrappedParams = use(params);
+    const contestId = unwrappedParams.contestId;
     const [data, setData] = useState<APIResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');

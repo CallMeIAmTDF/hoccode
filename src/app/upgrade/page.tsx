@@ -1,279 +1,261 @@
+
 "use client"
 
-import React, { useState } from 'react';
-import { Crown, Check, Zap, Bot, Code, MessageCircle, ArrowRight, X, Lock } from 'lucide-react';
-import {Header} from "@/components/header";
+import React, { useState, useEffect } from 'react';
+import {
+    Crown, Check, Zap, Bot, Sparkles, ArrowRight, X,
+    Loader2, ShieldCheck, Heart, Star, BrainCircuit,
+    Users, Code, Rocket, CheckCircle2
+} from 'lucide-react';
+import { Header } from "@/components/header";
+import { notify } from "@/components/notify";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import {apiGet} from "@/lib/api";
+import PaymentConfirmModal from "@/components/PaymentConfirmModal";
+import {getVietQRUrl, PaymentLinkResponse} from "@/lib/types/premium";
+
 
 export default function UpgradePage() {
+    const [loading, setLoading] = useState(true);
+    const [isPremium, setIsPremium] = useState<boolean>(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [payOs, setPayOs] = useState<PaymentLinkResponse>();
 
-    const freeFeatures = [
-        {
-            icon: <Code className="h-5 w-5" />,
-            title: "Giải bài tập cơ bản",
-            description: "Truy cập hơn 500+ bài tập lập trình miễn phí",
-            status: "free"
-        },
-        {
-            icon: <Bot className="h-5 w-5" />,
-            title: "AI Code Helper",
-            description: "5 lượt hỗ trợ AI mỗi ngày",
-            status: "limited"
-        },
-        {
-            icon: <MessageCircle className="h-5 w-5" />,
-            title: "AI Code Review",
-            description: "3 lần review code mỗi tuần",
-            status: "limited"
-        }
-    ];
+    useEffect(() => {
+        const checkStatus = async () => {
+            setLoading(true);
+            try {
+                const data = await apiGet<boolean>("/premium");
+                setIsPremium(data);
+                localStorage.setItem("premium", JSON.stringify(data));
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        checkStatus();
+    }, []);
 
-    const premiumFeatures = [
-        {
-            icon: <Zap className="h-5 w-5" />,
-            title: "AI Code Helper không giới hạn",
-            description: "Sử dụng AI để giải thích, debug và tối ưu code bất cứ lúc nào",
-            status: "premium"
-        },
-        {
-            icon: <Bot className="h-5 w-5" />,
-            title: "AI Code Review không giới hạn",
-            description: "Nhận feedback chi tiết về code từ AI với quality cao",
-            status: "premium"
-        },
-        {
-            icon: <Code className="h-5 w-5" />,
-            title: "Truy cập tất cả bài tập Premium",
-            description: "Hơn 1000+ bài tập nâng cao và contest độc quyền",
-            status: "premium"
-        },
-        {
-            icon: <MessageCircle className="h-5 w-5" />,
-            title: "AI Interview Practice",
-            description: "Luyện tập phỏng vấn với AI mentor cá nhân hóa",
-            status: "premium"
-        }
-    ];
-
-    const handleUpgrade = () => {
+    const handlePayment = async () => {
+        setIsProcessing(true);
         setShowPaymentModal(true);
+        try {
+            const data = await apiGet<PaymentLinkResponse>("/payment");
+            setPayOs(data);
+            setIsProcessing(false);
+        }catch (error : any){
+            notify("error", {
+                title: "Thất bại",
+                description: "Lấy thông tin thanh toán không thành công"
+            })
+            setIsProcessing(false);
+            setShowPaymentModal(false);
+        }
     };
 
-    const handlePaymentConfirm = () => {
-        localStorage.setItem("premium", "true");
-        setShowPaymentModal(false);
-        alert("🎉 Chúc mừng! Bạn đã nâng cấp thành công lên Premium!");
-    };
+    const handleSuccess = () => {
+        setIsPremium(true);
+    }
+
+    if (loading) {
+        return (
+            <div className="h-screen flex flex-col bg-white">
+                <Header />
+                <div className="flex-1 flex flex-col items-center justify-center">
+                    <div className="w-10 h-10 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-background">
-            <Header></Header>
-            <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <div className="bg-white border-b border-gray-200">
-                    <div className="max-w-6xl mx-auto px-4 py-6 text-center">
+        <div className="h-screen flex flex-col bg-[#FDFDFD] overflow-hidden font-sans text-slate-900">
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes border-beam {
+                    0% { offset-distance: 0%; }
+                    100% { offset-distance: 100%; }
+                }
+                .border-beam {
+                    position: absolute;
+                    inset: 0;
+                    border: 1px solid transparent;
+                    border-radius: inherit;
+                    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                    mask-composite: exclude;
+                    pointer-events: none;
+                }
+                .border-beam::after {
+                    content: "";
+                    position: absolute;
+                    aspect-ratio: 1;
+                    width: 140px;
+                    background: linear-gradient(to right, #6366f1, transparent);
+                    offset-path: rect(0 auto auto 0 round 40px);
+                    animation: border-beam 6s linear infinite;
+                }
+                .shimmer-btn {
+                    background: linear-gradient(110deg, #4f46e5 45%, #6366f1 50%, #4f46e5 55%);
+                    background-size: 200% 100%;
+                    animation: shimmer 3s infinite;
+                }
+                @keyframes shimmer {
+                    0% { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
+                }
+            ` }} />
+
+            <Header />
+
+            <main className="flex-1 container mx-auto max-w-5xl p-6 flex flex-col justify-center gap-8 relative">
+                <div className="text-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="text-center space-y-3 mb-4 animate-in fade-in slide-in-from-top-4 duration-1000">
                         <div
-                            className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-sm font-medium mb-2">
-                            <Crown className="h-4 w-4"/>
-                            <span>Nâng cấp Premium</span>
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[11px] font-bold uppercase tracking-[0.15em]">
+                            <Star className="w-3 h-3 fill-indigo-600"/>
+                            Membership Plans
                         </div>
-
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                            Mở khóa toàn bộ chức năng
-                        </h1>
-
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-3">
-                            Nâng cao kỹ năng lập trình với AI không giới hạn và tất cả tính năng
-                        </p>
                     </div>
                 </div>
 
-                <div className="max-w-6xl mx-auto px-4 py-16">
-                    {/* Current vs Premium Comparison */}
-                    <div className="grid lg:grid-cols-2 gap-8 mb-16">
-                        {/* Free Plan */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-6">
-                            <div className="text-center mb-6">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">Miễn phí</h3>
-                                <p className="text-gray-600">Hiện tại của bạn</p>
-                            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full items-stretch pb-10">
 
-                            <div className="space-y-4">
-                                {freeFeatures.map((feature, index) => (
-                                    <div key={index} className="flex items-start gap-3">
-                                        <div className="bg-gray-100 rounded-lg p-2 text-gray-600 mt-1">
-                                            {feature.icon}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-medium text-gray-900 mb-1">{feature.title}</h4>
-                                            <p className="text-sm text-gray-600">{feature.description}</p>
-                                            {feature.status === 'limited' && (
-                                                <div className="flex items-center gap-1 mt-2">
-                                                    <Lock className="h-3 w-3 text-orange-500"/>
-                                                    <span
-                                                        className="text-xs text-orange-600 font-medium">Có giới hạn</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                    {/* FREE PLAN CARD */}
+                    <div
+                        className="bg-white rounded-[2.5rem] border border-slate-200 p-10 flex flex-col shadow-sm transition-all hover:border-slate-300">
+                        <div className="mb-8">
+                            <h3 className="text-lg font-bold text-slate-900 mb-1">Standard</h3>
+                            <p className="text-sm text-slate-400 font-medium">Dành cho người mới bắt đầu</p>
+                            <div className="mt-6 flex items-baseline gap-1">
+                                <span className="text-4xl font-black text-slate-900">Miễn phí</span>
                             </div>
                         </div>
 
-                        {/* Premium Plan */}
-                        <div className="bg-white rounded-xl border-2 border-orange-200 p-6 relative">
-                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                    Premium
+                        <div className="space-y-5 flex-1">
+                            <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                    <Check className="w-3 h-3 text-slate-400" />
                                 </div>
+                                Giới hạn 5 lượt AI hỗ trợ/ngày
                             </div>
-
-                            <div className="text-center mb-6">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">Premium Lifetime</h3>
-                                <div className="flex items-baseline justify-center gap-1 mb-2">
-                                    <span className="text-3xl font-bold text-gray-900">10,000</span>
-                                    <span className="text-gray-600">vnđ</span>
+                            <div className="flex items-center gap-3 text-sm font-medium text-slate-600 opacity-50">
+                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                    <X className="w-3 h-3 text-slate-300" />
                                 </div>
-                                <p className="text-sm text-gray-600">Trả một lần, sử dụng trọn đời</p>
+                                <span className="line-through">Phân tích hồ sơ bằng AI</span>
                             </div>
-
-                            <div className="space-y-4 mb-8">
-                                {premiumFeatures.map((feature, index) => (
-                                    <div key={index} className="flex items-start gap-3">
-                                        <div className="bg-orange-100 rounded-lg p-2 text-orange-600 mt-1">
-                                            {feature.icon}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-medium text-gray-900 mb-1">{feature.title}</h4>
-                                            <p className="text-sm text-gray-600">{feature.description}</p>
-                                        </div>
-                                        <div className="bg-green-100 rounded-full p-1 mt-1">
-                                            <Check className="h-3 w-3 text-green-600"/>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                    <Check className="w-3 h-3 text-slate-400" />
+                                </div>
+                                Truy cập kho 1,000+ bài tập
                             </div>
+                        </div>
 
+                        <div className="mt-10">
                             <button
-                                onClick={handleUpgrade}
-                                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 group"
+                                disabled
+                                className="w-full py-4 bg-slate-50 text-slate-400 font-bold rounded-2xl border border-slate-100 cursor-not-allowed text-sm"
                             >
-                                <Crown className="h-5 w-5"/>
-                                Nâng cấp Premium
-                                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
+                                Gói hiện tại của bạn
                             </button>
                         </div>
                     </div>
 
-                    {/* Why Premium */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-8">
-                        <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-                            Tại sao nên chọn Premium?
-                        </h2>
+                    {/* PREMIUM PLAN CARD */}
+                    <div className={cn(
+                        "relative rounded-[2.5rem] p-10 flex flex-col overflow-hidden transition-all duration-500",
+                        isPremium
+                            ? "bg-white border border-slate-200 shadow-sm"
+                            : "bg-slate-950 text-white shadow-2xl shadow-indigo-200/50"
+                    )}>
+                        {!isPremium && <div className="border-beam"></div>}
 
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <div className="text-center">
-                                <div
-                                    className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                                    <Bot className="h-8 w-8 text-blue-600"/>
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="mb-8 flex justify-between items-start">
+                                <div>
+                                    <h3 className="text-lg font-bold mb-1">Premium</h3>
+                                    <p className={cn("text-sm font-medium", isPremium ? "text-slate-400" : "text-slate-500")}>
+                                        Đặc quyền lập trình tối thượng
+                                    </p>
                                 </div>
-                                <h3 className="font-semibold text-gray-900 mb-2">AI Không giới hạn</h3>
-                                <p className="text-sm text-gray-600">
-                                    Sử dụng AI helper và code review bao nhiêu lần cũng được, không lo hết quota
-                                </p>
+                                {!isPremium && (
+                                    <Badge className="bg-indigo-600 hover:bg-indigo-600 text-white border-none font-bold text-[9px] uppercase tracking-widest px-2 py-1">
+                                        Lifetime
+                                    </Badge>
+                                )}
                             </div>
 
-                            <div className="text-center">
-                                <div
-                                    className="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                                    <Code className="h-8 w-8 text-green-600"/>
+                            {!isPremium && (
+                                <div className="mb-8 flex items-baseline gap-1">
+                                    <span className="text-4xl font-black">10.000</span>
+                                    <span className="text-indigo-400 font-bold text-sm">VNĐ</span>
                                 </div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Nội dung độc quyền</h3>
-                                <p className="text-sm text-gray-600">
-                                    Truy cập 1000+ bài tập nâng cao và các contest chỉ dành cho thành viên Premium
-                                </p>
+                            )}
+
+                            <div className="space-y-5 flex-1">
+                                <div className="flex items-center gap-3 text-sm font-medium group transition-all">
+                                    <div className={cn(
+                                        "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                                        isPremium ? "bg-indigo-50 text-indigo-600" : "bg-indigo-500/20 text-indigo-400"
+                                    )}>
+                                        <Bot className="w-3 h-3" />
+                                    </div>
+                                    Hỏi đáp AI không giới hạn
+                                </div>
+                                <div className="flex items-center gap-3 text-sm font-medium group transition-all">
+                                    <div className={cn(
+                                        "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                                        isPremium ? "bg-indigo-50 text-indigo-600" : "bg-indigo-500/20 text-indigo-400"
+                                    )}>
+                                        <BrainCircuit className="w-3 h-3" />
+                                    </div>
+                                    Phân tích trang cá nhân bằng AI
+                                </div>
+                                <div className="flex items-center gap-3 text-sm font-medium group transition-all">
+                                    <div className={cn(
+                                        "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                                        isPremium ? "bg-indigo-50 text-indigo-600" : "bg-indigo-500/20 text-indigo-400"
+                                    )}>
+                                        <Check className="w-3 h-3" />
+                                    </div>
+                                    Mở khóa mọi tính năng trong tương lai
+                                </div>
                             </div>
 
-                            <div className="text-center">
-                                <div
-                                    className="bg-purple-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                                    <Zap className="h-8 w-8 text-purple-600"/>
-                                </div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Trả một lần</h3>
-                                <p className="text-sm text-gray-600">
-                                    Không như các dịch vụ khác, bạn chỉ cần trả một lần và sử dụng trọn đời
-                                </p>
+                            <div className="mt-10">
+                                {isPremium ? (
+                                    <div className="flex items-center justify-center gap-2 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600 font-bold text-sm animate-in fade-in zoom-in-95">
+                                        <CheckCircle2 className="w-5 h-5" />
+                                        Bạn đang là hội viên Premium
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handlePayment}
+                                        className="w-full py-5 shimmer-btn text-white font-black rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 text-sm group/btn hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        Nâng cấp trọn đời
+                                        <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                                    </button>
+                                )}
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Testimonials */}
-                    <div className="text-center mt-12">
-                        <p className="text-gray-600 mb-4">
-                            Được hơn 10,000+ lập trình viên tin tưởng
-                        </p>
-                        <div className="flex justify-center gap-1 text-orange-400">
-                            {[...Array(5)].map((_, i) => (
-                                <svg key={i} className="h-5 w-5 fill-current" viewBox="0 0 20 20">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                </svg>
-                            ))}
                         </div>
                     </div>
                 </div>
-
-                {/* Payment Modal */}
-                {showPaymentModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-xl p-6 max-w-md w-full">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-semibold text-gray-900">Xác nhận nâng cấp</h3>
-                                <button
-                                    onClick={() => setShowPaymentModal(false)}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    <X className="h-5 w-5"/>
-                                </button>
-                            </div>
-
-                            <div className="text-center mb-6">
-                                <div
-                                    className="bg-orange-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                                    <Crown className="h-8 w-8 text-orange-500"/>
-                                </div>
-                                <h4 className="font-semibold text-gray-900 mb-2">Premium Lifetime</h4>
-                                <p className="text-sm text-gray-600 mb-4">
-                                    Truy cập không giới hạn tất cả tính năng AI và nội dung premium
-                                </p>
-                                <div className="text-2xl font-bold text-gray-900">
-                                    2,990,000đ
-                                </div>
-                                <p className="text-sm text-gray-500">Trả một lần • Sử dụng trọn đời</p>
-                            </div>
-
-                            <div className="space-y-3">
-                                <button
-                                    onClick={handlePaymentConfirm}
-                                    className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
-                                >
-                                    Xác nhận thanh toán
-                                </button>
-                                <button
-                                    onClick={() => setShowPaymentModal(false)}
-                                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors"
-                                >
-                                    Hủy bỏ
-                                </button>
-                            </div>
-
-                            <p className="text-xs text-gray-500 text-center mt-4">
-                                Hoàn tiền 100% trong vòng 7 ngày nếu không hài lòng
-                            </p>
-                        </div>
-                    </div>
-                )}
-            </div>
+            </main>
+            <PaymentConfirmModal
+                onSuccess={handleSuccess}
+                isShowPaymentModal={showPaymentModal}
+                loadingData={isProcessing}
+                onClose={() => setShowPaymentModal(false)}
+                accountName={payOs?.accountName ?? ""}
+                accountNumber={payOs?.accountNumber ?? ""}
+                description={payOs?.description ?? ""}
+                amount={payOs?.amount ?? 10000}
+                qrImageUrl={payOs ? getVietQRUrl(payOs) : ""}
+            />
         </div>
     );
 }

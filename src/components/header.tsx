@@ -15,6 +15,8 @@ export function Header() {
 
     const handleLogout = () => {
         localStorage.clear();
+        localStorage.setItem('hasSeenOnboarding', 'true');
+        localStorage.setItem('hasSeenLearnProblemOnboarding', 'true')
         setIsLoggedIn(false);
         router.push('/');
     };

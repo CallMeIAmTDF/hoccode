@@ -19,8 +19,6 @@ export const StreakNotification: React.FC<StreakNotificationProps> = ({
     const [isExploding, setIsExploding] = useState(false);
 
     useEffect(() => {
-        console.log(12312132)
-
         if (isVisible) {
             setDisplayNumber(from);
             setIsExploding(false);

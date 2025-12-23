@@ -117,7 +117,7 @@ export function ProblemFilters({ filters, onFiltersChange, onRandom }: ProblemFi
     const hasActiveFilters = filters.keyword || filters.difficulty !== "ALL" || filters.categories.length > 0
 
     return (
-        <div className="space-y-4 mb-6">
+        <div className="space-y-4 mb-6" id="tour-filters">
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                     <div className="relative">
@@ -168,7 +168,7 @@ export function ProblemFilters({ filters, onFiltersChange, onRandom }: ProblemFi
                         </Command>
                     </PopoverContent>
                 </Popover>
-                <Button variant="outline" onClick={() => onRandom?.()} className="w-full sm:w-[140px]">
+                <Button variant="outline" onClick={() => onRandom?.()} className="w-full sm:w-[140px]" id="tour-random">
                     <Shuffle className="h-4 w-4 mr-2" />
                     Ngẫu nhiên
                 </Button>

@@ -54,7 +54,7 @@ export function ProblemList({ problems, dailyProblem, dailyProblemId, filters, o
         <div className="space-y-4">
             <ProblemFilters filters={filters} onFiltersChange={onFiltersChange} onRandom={onRandom} />
 
-            <div className="rounded-lg border bg-card">
+            <div className="rounded-lg border bg-card" id="tour-list">
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
@@ -69,6 +69,7 @@ export function ProblemList({ problems, dailyProblem, dailyProblemId, filters, o
                     <TableBody>
                         <TableRow
                             key={dailyProblem.id}
+                            id="tour-daily"
                             className="hover:bg-muted/50 cursor-pointer"
                             onClick={() => onProblemClick(dailyProblem.id)}
                         >

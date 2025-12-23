@@ -163,8 +163,8 @@ export default function SignUpPage() {
                                         className="pl-10 border-slate-300 focus:border-blue-500"
                                         required
                                         max={new Date().toISOString().split("T")[0]}
-                                        ref={dateRef}
-                                        onFocus={() => dateRef.current?.showPicker()}
+                                        // ref={dateRef}
+                                        // onFocus={() => dateRef.current?.showPicker()}
                                     />
                                 </div>
                             </div>

@@ -12,10 +12,44 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {useEffect, useState} from "react";
 import NotificationDropdown from "@/components/NotificationDropdown";
+import {apiGet} from "@/lib/api";
 
 export default function NavbarActions({ isLoggedIn, handleLogout }: { isLoggedIn: boolean, handleLogout: () => void }) {
     const [user, setUser] = useState<{ name: string; email: string; avatar: string; isPremium: boolean } | null>(null)
     const [isMounted, setIsMounted] = useState(false);
+    const [isPremium, setIsPremium] = useState(false);
+
+    useEffect(() => {
+        const syncPremium = () => {
+            setIsPremium(localStorage.getItem("premium") === "true");
+        };
+        syncPremium();
+
+        window.addEventListener("storage", syncPremium);        // tab khác
+        window.addEventListener("premium-change", syncPremium); // cùng tab
+
+        return () => {
+            window.removeEventListener("storage", syncPremium);
+            window.removeEventListener("premium-change", syncPremium);
+        };
+    }, []);
+
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                if(!localStorage.getItem("accessToken")){
+                    return null;
+                }
+                const data = await apiGet<boolean>("/premium");
+                setIsPremium(data);
+                localStorage.setItem("premium", JSON.stringify(data));
+            } catch (error) {
+                console.error(error);
+            } finally {
+            }
+        };
+        checkStatus();
+    }, []);
 
     useEffect(() => {
         setIsMounted(true);
@@ -27,9 +61,9 @@ export default function NavbarActions({ isLoggedIn, handleLogout }: { isLoggedIn
             const email = localStorage.getItem("email") || ""
             const premium = localStorage.getItem("premium") === "true"
             const avatar = localStorage.getItem("avatar") || ""
-            setUser({ name, email, avatar, isPremium: premium })
+            setUser({ name, email, avatar, isPremium })
         }
-    }, [isLoggedIn])
+    }, [isLoggedIn, isPremium])
 
     // Hydration & Auth Latency Fix:
     // 1. If not mounted (SSR), show skeleton.
@@ -102,25 +136,28 @@ export default function NavbarActions({ isLoggedIn, handleLogout }: { isLoggedIn
 
                     <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg p-1">
                         <div className="px-3 py-2">
-                            <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium">{user?.name || "Người dùng"}</p>
+                            <div className="flex items-center gap-1">
+                                <p className="text-xs font-medium">
+                                    {user?.name || "Người dùng"}
+                                </p>
+
                                 {user?.isPremium && (
-                                    <div className="flex items-center gap-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs px-2 py-0.5 rounded-full">
-                                        <Crown className="h-3 w-3" />
-                                        <span className="font-medium">PREMIUM</span>
-                                    </div>
+                                    <Crown className="h-3.5 w-3.5 text-yellow-500"/>
                                 )}
                             </div>
-                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+
+                            <p className="text-xs text-muted-foreground truncate">
+                                {user?.email}
+                            </p>
                         </div>
 
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator/>
 
                         {user?.isPremium && (
                             <>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/premium-features" className="flex items-center gap-2">
-                                        <Star className="h-4 w-4 text-yellow-500" />
+                                    <Link href="/upgrade" className="flex items-center gap-2">
+                                        <Star className="h-4 w-4 text-yellow-500"/>
                                         <span>Tính năng Premium</span>
                                     </Link>
                                 </DropdownMenuItem>

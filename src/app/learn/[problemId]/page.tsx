@@ -47,6 +47,8 @@ import {Solution} from "@/lib/types/solution";
 import SolutionModal from "@/components/SampleSolutionsModal";
 import {StreakNotification} from "@/components/animation/StreakNotification";
 import {useSocket} from "@/context/SocketProvider";
+import {OnboardingTour} from "@/components/guidetour/OnboardingTour";
+import {learnPageSteps, learnProblemPageSteps} from "@/lib/onboard/steps";
 
 
 const MonacoEditorComponent = dynamic(() => import("@/components/hoccodeeditor"), {ssr: false});
@@ -55,15 +57,6 @@ const MonacoEditorComponent = dynamic(() => import("@/components/hoccodeeditor")
 type ActiveTab = "problem" | "result" | "discussion";
 type SortOption = "date" | "views";
 
-interface ExtendedTopic {
-    id: string;
-    title: string;
-    description: string;
-    author: { userId: string; username: string; };
-    viewCount: number;
-    createdAt: string;
-    isSolved: boolean;
-}
 
 interface Discussion {
     id: number;
@@ -282,6 +275,27 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
     const [prevStreak, setPrevStreak] = useState(1);
     const {isConnected, subscribe} = useSocket();
 
+    const [runTour, setRunTour] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (!isMounted) return;
+
+        const hasSeenTour = localStorage.getItem('hasSeenLearnProblemOnboarding');
+        if (!hasSeenTour || hasSeenTour === 'false') {
+            const timer = setTimeout(() => {
+                setRunTour(true);
+                localStorage.setItem('hasSeenLearnProblemOnboarding', 'true');
+
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [isMounted]);
+
     const handleRun = async () => {
         try {
             notify("success", {
@@ -483,18 +497,23 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
     useEffect(() => {
         if (!isConnected) return;
         const sub = subscribe(`/user/topic/normal`, (msg) => {
-            console.log("RAW STOMP MESSAGE:", msg);
             switch (msg.type){
                 case "STREAK_UPDATE":
                     setStreak(msg.data + 1)
                     setPrevStreak(msg.data)
-                    console.log(msg.data)
-                    setShowOverlay(true);
+                    setTimeout(() => {
+                        setShowOverlay(true);
+                    }, 500)
                     break
             }
         });
         return () => sub?.unsubscribe();
     }, [subscribe, isConnected]);
+
+    const handleTourFinish = () => {
+        setRunTour(false);
+        localStorage.setItem('hasSeenLearnProblemOnboarding', 'true');
+    };
 
     if (authed === null) {
         return (
@@ -505,6 +524,7 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
 
     return (
         <div className="min-h-screen bg-background">
+            {isMounted && <OnboardingTour run={runTour} onFinish={handleTourFinish} steps={learnProblemPageSteps}/>}
             <Header/>
 
             {/* Modal Đăng bài mới */}
@@ -561,14 +581,14 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
                         {/* Tab Headers */}
                         <TabsList className="w-full grid grid-cols-3">
                             <TabsTrigger value="problem">Thử Thách</TabsTrigger>
-                            <TabsTrigger value="result" disabled={!hasResult}>Kết Quả</TabsTrigger>
+                            <TabsTrigger value="result" disabled={!hasResult}  id="tour-result">Kết Quả</TabsTrigger>
                             <TabsTrigger value="discussion">Thảo Luận</TabsTrigger>
                         </TabsList>
 
                         {/* ====================================================
                            TAB 1: THỬ THÁCH (PROBLEM)
                            ==================================================== */}
-                        <TabsContent value="problem" className="flex-1 overflow-hidden">
+                        <TabsContent value="problem" className="flex-1 overflow-hidden" id="tour-problem-information">
                             <Card className="overflow-hidden flex flex-col h-full">
                                 <CardHeader className="space-y-3">
                                     <CardTitle className="flex flex-col gap-2">
@@ -1013,6 +1033,7 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
                                     value={language}
                                     onChange={(e) => handleLanguageChange(e.target.value as any)}
                                     className="h-9 rounded-md border bg-background px-2 text-sm"
+                                    id="tour-select-language"
                                 >
                                     <option value="java">Java</option>
                                     <option value="cpp">C++</option>
@@ -1023,17 +1044,18 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
                                     size="sm"
                                     onClick={handleRun}
                                     disabled={running || loading}
+                                    id="tour-run"
                                 >
                                     <Play className="h-4 w-4 mr-1"/> Kiểm thử
                                 </Button>
-                                <Button className="cursor-pointer" size="sm" onClick={handleSubmit}
+                                <Button className="cursor-pointer" size="sm" onClick={handleSubmit} id="tour-submit"
                                         disabled={submitting || loading}>
                                     <SendHorizonal className="h-4 w-4 mr-1"/> Nộp bài
                                 </Button>
                             </div>
                         </CardHeader>
                         <CardContent className="flex-1 p-0">
-                            <div className="h-full">
+                            <div className="h-full" id="tour-hoccodeeditor">
                                 <MonacoEditorComponent
                                     height="100%"
                                     language={language}
@@ -1044,6 +1066,7 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
                                         minimap: {enabled: false},
                                         scrollBeyondLastLine: false,
                                     }}
+
                                 >
                                 </MonacoEditorComponent>
                             </div>

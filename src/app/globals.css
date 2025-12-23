@@ -183,3 +183,20 @@ input[type="date"]::-webkit-clear-button {
 .monaco-editor.readonly .view-lines ::selection {
   background: transparent !important;
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari */
+}
+
+.scrollbar-hover::-webkit-scrollbar {
+  width: 0;
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar {
+  width: 6px;
+}

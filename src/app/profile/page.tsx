@@ -30,6 +30,10 @@ import {
 import {Sidebar} from "@/components/sidebar";
 import UserStatsModal from "@/app/test2/UserStatsModal";
 import {AnalysisReportModal} from "@/components/AIAccountAnalysisModal";
+import {EditProfileModal} from "@/components/EditProfileModal";
+import {PremiumGateModal} from "@/components/PremiumGateModal";
+import PaymentConfirmModal from "@/components/PaymentConfirmModal";
+import {getVietQRUrl, PaymentLinkResponse} from "@/lib/types/premium";
 
 
 interface HeatmapData {
@@ -99,12 +103,56 @@ export default function ProfilePage() {
     const [aiLoadingAnalysisModal, setAILoadingAnalysisModal] = useState<boolean>(true);
     const [aiAnalysisData, setAIAnalysisData] = useState<AIAnalysis | null>(null)
 
+    const [editProfileOpen, setEditProfileOpen] = useState<boolean>(false);
+
+    const [loadingHeatmap, setLoadingHeatmap] = useState(true);
+    const [loadingRadar, setLoadingRadar] = useState(true);
+    const [loadingProfile, setLoadingProfile] = useState(true);
+    const [loadingProgress, setLoadingProgress] = useState(true);
+    const [loadingDaily, setLoadingDaily] = useState(true);
+
+    const [isPremium, setIsPremium] = useState(false);
+    const [isOpenPremiumGate, setIsOpenPremiumGate] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [payOs, setPayOs] = useState<PaymentLinkResponse>();
+
+    const handleSuccess = () => {
+        setIsPremium(true);
+    }
+
+    const handleShowPaymentModal = async () => {
+        setIsProcessing(true);
+        setShowPaymentModal(true);
+        setIsOpenPremiumGate(false);
+        try {
+            const data = await apiGet<PaymentLinkResponse>("/payment");
+            setPayOs(data);
+            setIsProcessing(false);
+        }catch (error : any){
+            notify("error", {
+                title: "Thất bại",
+                description: "Lấy thông tin thanh toán không thành công"
+            })
+            setIsProcessing(false);
+            setShowPaymentModal(false);
+        }
+    }
+
+    const handleUpdateSuccess = async () => {
+        fetchStats();
+    }
+
+    const handleUpdate = () => {
+        setEditProfileOpen(true);
+    }
+
     const handleAnalysis = async () => {
         try {
             setAnalysisModalOpen(true);
             const analysis = await apiGet<UserStatsData>("/profile/analysis");
             setAnalysisData(analysis);
-        } catch (err: any){
+        } catch (err: any) {
             setAnalysisModalOpen(false);
             notify('error', {
                 title: "Lỗi tải dữ liệu",
@@ -115,13 +163,30 @@ export default function ProfilePage() {
         }
     }
 
+    const getIsPremium = async () => {
+        try {
+            const data = await apiGet<boolean>(`/premium`);
+            setIsPremium(data);
+            localStorage.setItem("premium", JSON.stringify(data))
+            window.dispatchEvent(new Event("premium-change"));
+        } catch (err:any){
+            console.log("ERROR PREMIUM")
+            setIsPremium(false)
+
+        }
+    }
+
     const handleAiAnalysis = async () => {
+        if (!isPremium){
+            setIsOpenPremiumGate(true)
+            return;
+        }
         try {
             setAIAnalysisModalOpen(true);
             setAnalysisModalOpen(false);
             const summary = await apiGet<AIAnalysis>("/ai/profile");
             setAIAnalysisData(summary);
-        } catch (err: any){
+        } catch (err: any) {
             setAIAnalysisModalOpen(false);
             notify('error', {
                 title: "Lỗi tải dữ liệu",
@@ -132,69 +197,103 @@ export default function ProfilePage() {
         }
     }
 
-    const handleUpdate = () => {
-
-    }
 
     async function fetchHeatmap() {
-        const heatmap = await apiGet<Record<string, number>>("/profile/heatmap")
-        const newData: HeatmapData[] = eachDayOfInterval({start: startDate, end: endDate}).map((date) => {
-            const key = format(date, "yyyy-MM-dd");
-            return {
-                date: key,
-                count: heatmap[key] ?? 0,
-            };
-        });
-        setHeatmapData(newData);
+        setLoadingHeatmap(true);
+        try {
+            const heatmap = await apiGet<Record<string, number>>("/profile/heatmap");
+            const newData: HeatmapData[] = eachDayOfInterval({start: startDate, end: endDate}).map((date) => {
+                const key = format(date, "yyyy-MM-dd");
+                return {
+                    date: key,
+                    count: heatmap[key] ?? 0,
+                };
+            });
+            setHeatmapData(newData);
+        } catch (error) {
+            notify("error", {
+                title: "Lỗi tải heatmap",
+                description: "Không thể tải dữ liệu heatmap.",
+            });
+        } finally {
+            setLoadingHeatmap(false);
+        }
     }
 
     async function fetchRadarChart() {
-        const radar = await apiGet<ApiCategory[]>("/profile/submissionByCategory")
-        setRadarData(radar)
+        setLoadingRadar(true);
+        try {
+            const radar = await apiGet<ApiCategory[]>("/profile/submissionByCategory");
+            setRadarData(radar);
+        } catch (error) {
+            notify("error", {
+                title: "Lỗi tải biểu đồ radar",
+                description: "Không thể tải thống kê.",
+            });
+        } finally {
+            setLoadingRadar(false);
+        }
     }
 
     async function fetchStats() {
-        const stats = await apiGet<ProfileStats>("/profile/stats")
-        setProfileData(stats)
+        setLoadingProfile(true);
+        try {
+            const stats = await apiGet<ProfileStats>("/profile/stats");
+            setProfileData(stats);
+        } catch (error) {
+            notify("error", {
+                title: "Lỗi tải hồ sơ",
+                description: "Không thể tải hồ sơ người dùng.",
+            });
+        } finally {
+            setLoadingProfile(false);
+        }
     }
 
     async function fetchProblemSolvedDiff() {
-        const stats = await apiGet<Stats>("/profile/problemSolvedDiff")
-        console.log(stats)
-        setProgress({
-            stats: stats
-        })
+        setLoadingProgress(true);
+        try {
+            const stats = await apiGet<Stats>("/profile/problemSolvedDiff");
+            setProgress({stats});
+        } catch (error) {
+            notify("error", {
+                title: "Lỗi tải tiến độ",
+                description: "Không thể tải tiến độ giải bài.",
+            });
+        } finally {
+            setLoadingProgress(false);
+        }
     }
 
     async function fetchDailySubmission() {
-        const dailySubmission = await apiGet<DailySubmission[]>("/profile/getDailySubmissions")
-        console.log(dailySubmission)
-
-
-        const formattedData = dailySubmission.map(item => ({
-            ...item,
-            day: new Date(item.day).toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit'})
-        }));
-        setDaily(formattedData)
-
+        setLoadingDaily(true);
+        try {
+            const dailySubmission = await apiGet<DailySubmission[]>("/profile/getDailySubmissions");
+            const formattedData = dailySubmission.map(item => ({
+                ...item,
+                day: new Date(item.day).toLocaleDateString("vi-VN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                }),
+            }));
+            setDaily(formattedData);
+        } catch (error) {
+            notify("error", {
+                title: "Lỗi tải thống kê hằng ngày",
+                description: "Không thể tải dữ liệu.",
+            });
+        } finally {
+            setLoadingDaily(false);
+        }
     }
 
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                await Promise.all([
-                    fetchHeatmap(),
-                    fetchRadarChart(),
-                    fetchStats(),
-                    fetchProblemSolvedDiff(),
-                    fetchDailySubmission(),
-                ]);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+        fetchHeatmap();
+        fetchRadarChart();
+        fetchStats();
+        fetchProblemSolvedDiff();
+        fetchDailySubmission();
+        getIsPremium();
     }, []);
 
     return (
@@ -212,12 +311,14 @@ export default function ProfilePage() {
                                         <CardHeader>
                                             <CardTitle className="flex flex-col items-center gap-2">
                                                 <Avatar
-                                                    className="w-24 h-24 cursor-pointer ring-2 ring-muted hover:ring-blue-700 transition">
+                                                    className="w-28 h-28 ring-4 ring-white shadow-lg cursor-pointer transition-transform group-hover:scale-105">
                                                     {profileData?.info.avatar ? (
                                                         <AvatarImage src={profileData.info.avatar}
-                                                                     alt={`${profileData.info.name} avatar`}/>
+                                                                     alt={`${profileData.info.name} avatar`}
+                                                                     className="object-cover"/>
                                                     ) : (
-                                                        <AvatarFallback>
+                                                        <AvatarFallback
+                                                            className="text-3xl bg-indigo-100 text-indigo-600">
                                                             {profileData?.info.name?.charAt(0).toUpperCase() || "U"}
                                                         </AvatarFallback>
                                                     )}
@@ -307,7 +408,7 @@ export default function ProfilePage() {
 
                                     {/* Cột 2 */}
                                     {
-                                        !loading ? (
+                                        !loadingRadar ? (
                                             <RadarProblemsChart apiData={radarData}/>
                                         ) : (
                                             <div className="flex justify-center items-center w-full h-full">
@@ -399,9 +500,37 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <UserStatsModal loading={loadingAnalysisModal} open={analysisModalOpen} onOpenChange={setAnalysisModalOpen} data={analysisData} onAnalyzeWithAI={handleAiAnalysis}></UserStatsModal>
-                        <AnalysisReportModal data={aiAnalysisData} onClose={() => {setAIAnalysisModalOpen(false)}} isLoading={aiLoadingAnalysisModal} isOpen={aiAnalysisModalOpen}/>
+                        <UserStatsModal loading={loadingAnalysisModal} open={analysisModalOpen}
+                                        onOpenChange={setAnalysisModalOpen} data={analysisData}
+                                        onAnalyzeWithAI={handleAiAnalysis}></UserStatsModal>
 
+                        <PremiumGateModal
+                            isOpen={isOpenPremiumGate} onClose={() => setIsOpenPremiumGate(false)} onConfirm={handleShowPaymentModal}>
+                        </PremiumGateModal>
+
+                        <PaymentConfirmModal
+                            onSuccess={handleSuccess}
+                            isShowPaymentModal={showPaymentModal}
+                            loadingData={isProcessing}
+                            onClose={() => setShowPaymentModal(false)}
+                            accountName={payOs?.accountName ?? ""}
+                            accountNumber={payOs?.accountNumber ?? ""}
+                            description={payOs?.description ?? ""}
+                            amount={payOs?.amount ?? 10000}
+                            qrImageUrl={payOs ? getVietQRUrl(payOs) : ""}
+                        />
+
+                        <AnalysisReportModal data={aiAnalysisData} onClose={() => {
+                            setAIAnalysisModalOpen(false)
+                        }} isLoading={aiLoadingAnalysisModal} isOpen={aiAnalysisModalOpen}/>
+                        {profileData && (
+                            <EditProfileModal
+                                open={editProfileOpen}
+                                onOpenChange={setEditProfileOpen}
+                                data={profileData.info}
+                                onUpdateSuccess={handleUpdateSuccess}
+                            />
+                        )}
                     </main>
                 </div>
             </div>

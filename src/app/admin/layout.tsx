@@ -16,6 +16,8 @@ interface AdminLayoutProps {
 const AdminRootLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const handleLogout = () => {
         window.localStorage.clear();
+        localStorage.setItem('hasSeenOnboarding', 'true');
+        localStorage.setItem('hasSeenLearnProblemOnboarding', 'true')
         window.location.href = "/auth/signin";
 
         notify("success", {

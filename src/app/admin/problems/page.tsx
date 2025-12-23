@@ -16,15 +16,16 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 // Import Lucide Icons
 import {
     FileText, PlusCircle, Search, Trash2, Edit, AlertTriangle, ArrowRight, Save,
-    X, ListChecks, Clock, MemoryStick, MinusCircle, Lightbulb, Tag, Eye, Upload, Download, Code
+    X, ListChecks, Clock, MemoryStick, MinusCircle, Lightbulb, Tag, Eye, Upload, Download, Code, Globe
 } from 'lucide-react';
 import {apiGet, apiPost, apiPut} from "@/lib/api";
 import {toast} from "sonner";
 import {notify} from "@/components/notify";
 import {Spinner} from "@/components/ui/shadcn-io/spinner";
 import {mockSolutions, Solution} from "@/lib/types/solution";
-import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog";
+import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription} from "@/components/ui/dialog";
 import {SolutionEditorModal, SolutionProvider, useSolution} from "@/components/SolutionEditorModal";
+import { Editor } from '@tinymce/tinymce-react';
 
 // ====================================================================
 // TYPES & MOCK DATA
@@ -211,7 +212,7 @@ const getDifficultyBadge = (difficulty: string) => {
             return <Badge variant="outline"
                           className="bg-orange-100 text-orange-600 border-orange-300 font-semibold">Khó</Badge>;
         case "EXPERT":
-            return <Badge variant="outline" className="bg-red-100 text-red-600 border-red-300 font-semibold">Chuyên
+            return <Badge variant="outline" className="bg-red-100 text-red-600 border-red-200 font-semibold">Chuyên
                 gia</Badge>;
         default:
             return <Badge variant="outline" className="bg-gray-100 text-gray-600">Khác</Badge>;
@@ -445,7 +446,7 @@ const ProblemListView: React.FC<ProblemListViewProps> = (props) => {
                             </SelectContent>
                         </Select>
                         <span className="hidden sm:inline">
-                             Problems/trang
+                             Thử thách/trang
                         </span>
                     </div>
 
@@ -480,11 +481,16 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
     const [selectedNewCategory, setSelectedNewCategory] = useState<string | null>(null);
     const [activeTestCaseId, setActiveTestCaseId] = useState<string>('0');
     // State mới để lưu thông báo lỗi validation
-    const [validationError, setValidationError] = useState<string | null>(null); // ĐÃ THÊM
+    const [validationError, setValidationError] = useState<string | null>(null);
+
+    // LeetCode Import States
+    const [isLeetCodeModalOpen, setIsLeetCodeModalOpen] = useState(false);
+    const [leetCodeUrl, setLeetCodeUrl] = useState("");
+    const [importingLeetCode, setImportingLeetCode] = useState(false);
 
     const {solutions, openModal, deleteSolution} = useSolution();
     const [problemSolutions, setProblemSolutions] = useState<Solution[]>([]);
-    // const problemSolutions = solutions.filter(s => s.pid === initialProblem.id);
+
     useEffect(() => {
         const fetchSolution = async () => {
             if (initialProblem != null){
@@ -499,6 +505,7 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
         }
         fetchSolution()
     }, [initialProblem, solutions]);
+
     // Cập nhật Tab Test Case active khi data thay đổi
     React.useEffect(() => {
         if (problem.allTestCases && problem.allTestCases.length > 0) {
@@ -519,12 +526,12 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
             [name]: type === 'number' ? Number(value) : value,
         }));
         // Reset validation error khi người dùng thay đổi input
-        setValidationError(null); // ĐÃ THÊM
+        setValidationError(null);
     };
 
     const handleDifficultyChange = (value: string) => {
         setProblem(prev => ({...prev, difficulty: value}));
-        setValidationError(null); // ĐÃ THÊM
+        setValidationError(null);
     };
 
     // --- Handlers Categories ---
@@ -598,7 +605,7 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                 tc.id === id ? {...tc, [field]: value} : tc
             )
         }));
-        setValidationError(null); // ĐÃ THÊM: Reset validation error khi thay đổi Test Case
+        setValidationError(null);
     };
 
     const handleRemoveTestCase = (id: number) => {
@@ -614,6 +621,66 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
             } else {
                 setActiveTestCaseId('0');
             }
+        }
+    };
+
+    // --- LeetCode Import Logic ---
+    const handleImportFromLeetCode = async () => {
+        if (!leetCodeUrl.trim()) {
+            notify("error", { title: "Lỗi", description: "Vui lòng nhập URL LeetCode" });
+            return;
+        }
+
+        setImportingLeetCode(true);
+        try {
+            // Giả định API endpoint là /admin/problem/leetcode và truyền url trong body
+            const data = await apiPost<any>(`/problem/crawl`, { url: leetCodeUrl });
+
+            // Map dữ liệu từ API LeetCode sang state của chúng ta
+            // API return hints as array of objects { description: string }
+            // API return testCases as array of objects { input, expectedOutput, isHidden }
+
+            const importedHints = (data.hints || []).map((h: any, idx: number) => ({
+                id: Date.now() + idx,
+                description: h.description || ""
+            }));
+
+            const importedTestCases = (data.testCases || []).map((tc: any, idx: number) => ({
+                id: Date.now() + 1000 + idx,
+                input: tc.input || "",
+                expectedOutput: tc.expectedOutput || "",
+                isHidden: tc.isHidden ?? true
+            }));
+
+            setProblem(prev => ({
+                ...prev,
+                title: data.title || prev.title,
+                description: data.description || prev.description,
+                constrains: data.constrains || prev.constrains,
+                followUp: data.followUp || prev.followUp,
+                timeLimit: data.timeLimit || prev.timeLimit,
+                memoryLimit: data.memoryLimit || prev.memoryLimit,
+                difficulty: data.difficulty || prev.difficulty,
+                point: data.point || prev.point,
+                categories: data.categories || prev.categories,
+                hints: importedHints,
+                allTestCases: importedTestCases
+            }));
+
+            notify("success", {
+                title: "Thành công",
+                description: "Đã nạp dữ liệu từ LeetCode thành công!"
+            });
+            setIsLeetCodeModalOpen(false);
+            setLeetCodeUrl("");
+        } catch (err: any) {
+            console.error(err);
+            notify("error", {
+                title: "Lỗi nhập liệu",
+                description: "Không thể lấy dữ liệu từ LeetCode. Vui lòng kiểm tra lại URL hoặc thử lại sau."
+            });
+        } finally {
+            setImportingLeetCode(false);
         }
     };
 
@@ -706,7 +773,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
     const handleSave = async () => {
         const error = validateProblem();
         if (error) { // KIỂM TRA LỖI
-            // setValidationError(error);
             notify("error", {
                 title: "Lỗi",
                 description: error
@@ -768,13 +834,25 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                     <Edit className="w-7 h-7 text-orange-500"/>
                     {isNew ? 'Thêm Thử thách mới' : `Chỉnh sửa Thử thách #${problem.id}`}
                 </h1>
-                <Button variant="outline" onClick={onCancel} disabled={loading}>
-                    <X className="w-5 h-5 mr-2"/>
-                    Hủy bỏ
-                </Button>
+                <div className="flex items-center gap-2">
+                    {isNew && (
+                        <Button
+                            variant="outline"
+                            className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                            onClick={() => setIsLeetCodeModalOpen(true)}
+                        >
+                            {/*<Globe className="w-4 h-4 mr-2" />*/}
+                            Nhập từ LeetCode
+                        </Button>
+                    )}
+                    {/*<Button variant="outline" onClick={onCancel} disabled={loading}>*/}
+                    {/*    /!*<X className="w-5 h-5 mr-2"/>*!/*/}
+                    {/*    Hủy bỏ*/}
+                    {/*</Button>*/}
+                </div>
             </div>
 
-            {/* HIỂN THỊ LỖI VALIDATION (ĐÃ THÊM) */}
+            {/* HIỂN THỊ LỖI VALIDATION */}
             {validationError && (
                 <div className="flex items-center p-3 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200">
                     <AlertTriangle className="flex-shrink-0 inline w-4 h-4 mr-3"/>
@@ -803,13 +881,12 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                                     <SelectItem value="EASY">Dễ</SelectItem>
                                     <SelectItem value="MEDIUM">Trung bình</SelectItem>
                                     <SelectItem value="HARD">Khó</SelectItem>
-                                    {/*<SelectItem value="EXPERT">Chuyên gia</SelectItem>*/}
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
-                    {/* Giới hạn Cấu hình (Cập nhật bố cục) */}
+                    {/* Giới hạn Cấu hình */}
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 pt-2">
                         {/* Điểm */}
                         <div className="space-y-2 col-span-1">
@@ -836,10 +913,8 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                                        value={problem.memoryLimit} onChange={handleChange} className="pr-12"/>
                                 <MemoryStick
                                     className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"/>
-                                {/*<span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">MB</span>*/}
                             </div>
                         </div>
-                        {/* Cột trống cho kích thước lớn hơn */}
                         <div className="hidden lg:block lg:col-span-3"></div>
                         <div className="hidden md:block md:col-span-1 lg:hidden"></div>
                     </div>
@@ -848,7 +923,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                     {/* Categories/Tags */}
                     <div className="space-y-3 pt-2">
                         <Label htmlFor="categories" className="flex items-center gap-1 font-semibold">
-                            {/*<Tag className="w-4 h-4 text-blue-600"/> */}
                             Danh mục
                         </Label>
                         <div className="flex flex-wrap gap-2">
@@ -878,7 +952,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                                 disabled={!selectedNewCategory}
                                 variant="secondary"
                             >
-                                {/*<PlusCircle className="w-4 h-4 mr-1"/> */}
                                 Thêm
                             </Button>
                         </div>
@@ -894,10 +967,33 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="description">Mô tả Problem (Markdown/HTML) <span
+                        <Label htmlFor="description">Mô tả thử thách<span
                             className="text-red-500">*</span></Label>
-                        <Textarea id="description" name="description" rows={6} value={problem.description}
-                                  onChange={handleChange} placeholder="Nhập mô tả đề bài chi tiết..."/>
+                        <div className="border rounded-md overflow-hidden bg-white min-h-[250px]">
+                            <Editor
+                                apiKey="c7g3bowjbi9v4vokvur1e5uskxie7ky57ykmuzyouehu6hfh"
+                                value={problem.description}
+                                onEditorChange={(content) => {
+                                    setProblem(prev => ({ ...prev, description: content }));
+                                    setValidationError(null);
+                                }}
+                                init={{
+                                    height: 250,
+                                    menubar: false,
+                                    plugins: [
+                                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                                        'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                                    ],
+                                    toolbar: 'undo redo | blocks | ' +
+                                        'bold italic forecolor | alignleft aligncenter ' +
+                                        'alignright alignjustify | bullist numlist outdent indent | ' +
+                                        'removeformat | code | help',
+                                    content_style: 'body { font-family:Inter,Helvetica,Arial,sans-serif; font-size:14px }',
+                                    placeholder: 'Nhập mô tả đề bài chi tiết...'
+                                }}
+                            />
+                        </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
@@ -918,11 +1014,9 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
             <Card className="shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                        {/*<Lightbulb className="w-5 h-5 text-yellow-600"/> */}
                         Gợi ý ({problem.hints?.length || 0})
                     </CardTitle>
                     <Button variant="secondary" size="sm" onClick={handleAddHint}>
-                        {/*<PlusCircle className="w-4 h-4 mr-1"/> */}
                         Thêm Gợi ý
                     </Button>
                 </CardHeader>
@@ -953,11 +1047,10 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                 </CardContent>
             </Card>
 
-            {/* Quản lý Test Cases (Dạng Tabs) */}
+            {/* Quản lý Test Cases */}
             <Card className="shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                        {/*<ListChecks className="w-5 h-5 text-purple-600"/> */}
                         Test Cases <span
                         className="text-red-500">*</span>
                     </CardTitle>
@@ -980,7 +1073,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                         </Button>
                         {/* Add New Test Case */}
                         <Button variant="secondary" size="sm" onClick={handleAddTestCase}>
-                            {/*<PlusCircle className="w-4 h-4 mr-1"/> */}
                             Thêm Test Case
                         </Button>
                     </div>
@@ -1008,7 +1100,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                                 <TabsContent key={tc.id} value={tc.id.toString()}
                                              className="mt-4 border p-4 rounded-lg bg-gray-50">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* Input */}
                                         <div className="space-y-2">
                                             <Label>Input <span className="text-red-500">*</span></Label>
                                             <Textarea
@@ -1019,7 +1110,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                                                 className="font-mono text-sm"
                                             />
                                         </div>
-                                        {/* Expected Output */}
                                         <div className="space-y-2">
                                             <Label>Expected Output <span className="text-red-500">*</span></Label>
                                             <Textarea
@@ -1033,7 +1123,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                                     </div>
 
                                     <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                                        {/* Checkbox isHidden */}
                                         <div className="flex items-center space-x-2 cursor-pointer">
                                             <Checkbox
                                                 className="cursor-pointer"
@@ -1045,7 +1134,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                                                 Ẩn Test Case này (Hidden Test)
                                             </label>
                                         </div>
-                                        {/* Nút xóa */}
                                         <Button
                                             variant="destructive"
                                             size="sm"
@@ -1060,7 +1148,7 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                     ) : (
                         <p className="text-center text-red-500 italic font-medium">
                             <AlertTriangle className="w-4 h-4 inline mr-1 -mt-0.5"/>
-                            Cần ít nhất một Test Case để lưu Problem. Hãy thêm thủ công hoặc Import từ JSON.
+                            Cần ít nhất một Test Case để lưu Thử thách. Hãy thêm thủ công hoặc tải từ JSON.
                         </p>
                     )}
                 </CardContent>
@@ -1070,7 +1158,6 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                 <Card className="shadow-lg">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                            {/*<Code className="w-5 h-5 text-green-600"/> */}
                             Lời giải ({problemSolutions.length})
                         </CardTitle>
                         <Button size="sm" onClick={() => openModal(initialProblem)}>
@@ -1112,34 +1199,68 @@ const ProblemEditorView: React.FC<ProblemEditorViewProps> = ({problem: initialPr
                     </CardContent>
                 </Card>
             )}
+
             {/* Footer Actions */}
             <div className="flex justify-end space-x-4 sticky bottom-0 bg-white p-4 border-t shadow-inner z-10">
                 <Button variant="outline" onClick={onCancel} disabled={loading}>
-                    <X className="w-5 h-5 mr-2"/>
+                    {/*<X className="w-5 h-5 mr-2"/>*/}
                     Hủy bỏ
                 </Button>
                 <Button onClick={handleSave} disabled={loading} className="bg-green-600 hover:bg-green-700">
-                    <Save className="w-5 h-5 mr-2"/>
-                    {loading ? (isNew ? 'Đang tạo...' : 'Đang lưu...') : (isNew ? 'Tạo Problem' : 'Lưu thay đổi')}
+                    {/*<Save className="w-5 h-5 mr-2"/>*/}
+                    {loading ? (isNew ? 'Đang tạo...' : 'Đang lưu...') : (isNew ? 'Tạo Thử thách' : 'Lưu thay đổi')}
                 </Button>
             </div>
+
+            {/* Modal Nhập từ LeetCode */}
+            <Dialog open={isLeetCodeModalOpen} onOpenChange={setIsLeetCodeModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Nhập từ LeetCode</DialogTitle>
+                        <DialogDescription>
+                            Dán URL bài tập LeetCode vào bên dưới để tự động điền thông tin.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="leetcode-url">URL Bài tập LeetCode</Label>
+                            <Input
+                                id="leetcode-url"
+                                placeholder="https://leetcode.com/problems/two-sum/"
+                                value={leetCodeUrl}
+                                onChange={(e) => setLeetCodeUrl(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsLeetCodeModalOpen(false)}>Hủy</Button>
+                        <Button
+                            onClick={handleImportFromLeetCode}
+                            disabled={importingLeetCode || !leetCodeUrl.trim()}
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            {importingLeetCode ? (
+                                <>
+                                    <Spinner className="mr-2" />
+                                    Đang lấy dữ liệu...
+                                </>
+                            ) : "Bắt đầu lấy dữ liệu"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
 
 // ====================================================================
-// ROOT COMPONENT (Giữ nguyên)
+// ROOT COMPONENT
 // ====================================================================
 
 const ProblemManagerRoot: React.FC = () => {
     const [editorMode, setEditorMode] = useState<AdminProblem | null>(null);
     const [problems, setProblems] = useState<AdminProblem[]>(mockProblems);
     const [loading, setLoading] = useState<boolean>(true);
-
-    // const [solutions, setSolutions] = useState<Solution[]>(mockSolutions);
-    // const [solutionModalOpen, setSolutionModalOpen] = useState(false);
-    // const [editingSolution, setEditingSolution] = useState<Solution | null>(null);
-    // const [currentProblemForSolution, setCurrentProblemForSolution] = useState<AdminProblem | null>(null);
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -1190,19 +1311,6 @@ const ProblemManagerRoot: React.FC = () => {
             </div>
         );
     }
-
-    // if (editorMode) {
-    //     const isNewProblem = !problems.find(p => p.id === editorMode.id);
-    //
-    //     return (
-    //         <ProblemEditorView
-    //             problem={editorMode}
-    //             isNew={isNewProblem}
-    //             onCancel={handleCancel}
-    //         />
-    //     );
-    // }
-
 
     return (
         <SolutionProvider>

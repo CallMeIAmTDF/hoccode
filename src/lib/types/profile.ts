@@ -175,3 +175,12 @@ export interface AnalysisReportData {
     funFacts: string[] | null;
     improvementSuggestions: ImprovementSuggestions | null;
 }
+
+
+export interface UserInfo {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    dob: string;
+}
