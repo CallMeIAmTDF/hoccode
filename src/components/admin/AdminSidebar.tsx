@@ -1,14 +1,26 @@
 "use client";
 
 import Link from 'next/link';
-import {LayoutDashboard, Users, FileText, Trophy, Bug, MessageSquare, Megaphone, DollarSign} from 'lucide-react';
+import {
+    LayoutDashboard,
+    Users,
+    FileText,
+    Trophy,
+    Bug,
+    MessageSquare,
+    Megaphone,
+    DollarSign,
+    Code,
+    Terminal, FolderOpen
+} from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
     { name: 'Trang chủ', href: '/admin', icon: LayoutDashboard },
     { name: 'Quản lý Thanh toán', href: '/admin/payment', icon: DollarSign },
-    { name: 'Quản lý Thử thách', href: '/admin/problems', icon: FileText },
-    { name: 'Quản lý Cuộc thi', href: '/admin/contests', icon: Trophy },
+    { name: 'Quản lý Thử thách', href: '/admin/problems', icon: Terminal },
+    // { name: 'Quản lý Cuộc thi', href: '/admin/contests', icon: Trophy },
+    { name: 'Quản lý Tài liệu', href: '/admin/files', icon: FolderOpen },
     { name: 'Quản lý Người dùng', href: '/admin/users', icon: Users },
     { name: 'Quản lý Báo cáo', href: '/admin/reports', icon: Bug },
     { name: 'Quản lý Thông báo', href: '/admin/notifications', icon: Megaphone },

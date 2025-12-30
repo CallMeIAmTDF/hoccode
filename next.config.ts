@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
         // tắt refresh overlay khi gặp lỗi params
         maxInactiveAge: 1000 * 60 * 60,
     },
-    // output: 'export',
+    output: 'standalone',
     images: {
         unoptimized: true
     },

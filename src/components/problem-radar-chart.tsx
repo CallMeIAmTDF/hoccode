@@ -87,13 +87,39 @@ const GROUP_MAP: Record<string, string> = {
     GREEDY: "Greedy",
     BIT_MANIPULATION: "Bitwise",
 }
+const GROUPS = [
+    "Linear",
+    "String",
+    "Tree",
+    "Graph",
+    "DP",
+    "Sort",
+    "DS",
+    "Math",
+    "Hash",
+    "Search",
+    "Greedy",
+    "Bitwise",
+    "Other",
+] as const
+
+type GroupName = typeof GROUPS[number]
 
 function aggregateByGroup(items: ApiCategory[]) {
-    const agg: Record<string, number> = {}
-    items.forEach(({category, count}) => {
-        const group = GROUP_MAP[category] || "Other"
-        agg[group] = (agg[group] || 0) + count
+    const agg: Record<GroupName, number> = GROUPS.reduce(
+        (acc, g) => {
+            acc[g] = 0
+            return acc
+        },
+        {} as Record<GroupName, number>
+    )
+
+    // cộng dồn dữ liệu thực tế
+    items.forEach(({ category, count }) => {
+        const group = (GROUP_MAP[category] ?? "Other") as GroupName
+        agg[group] += count
     })
+
     return agg
 }
 

@@ -4,6 +4,7 @@ import React, {useEffect, useState} from "react";
 import {Separator} from "@/components/ui/separator";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
+import {Chatbot} from "@/components/Chatbot";
 
 
 export default function HomePage() {
@@ -52,75 +53,7 @@ export default function HomePage() {
     }
     return (
         <>
-            {problem.description && (
-                <div className="prose prose-sm dark:prose-invert max-w-none"
-                     dangerouslySetInnerHTML={{__html: problem.description}}/>
-            )}
-            <Separator/>
-
-            {problem.constrains && (
-                <div>
-                    <h3 className="text-sm font-semibold mb-2">Ràng buộc</h3>
-                    <div className="prose prose-sm dark:prose-invert max-w-none"
-                         dangerouslySetInnerHTML={{__html: problem.constrains}}/>
-                </div>
-            )}
-            {problem.followUp && (
-                <div>
-                    <h3 className="text-sm font-semibold mb-2">Mở rộng</h3>
-                    <div
-                        className="prose prose-sm text-muted-foreground dark:prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{__html: problem.followUp}}/>
-                </div>
-            )}
-
-            <div>
-                <h3 className="text-sm font-semibold mb-2">Ví dụ</h3>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-16">#</TableHead>
-                            <TableHead>Đầu vào</TableHead>
-                            <TableHead>Đầu ra</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {problem.testCases?.filter((t) => !t.isHidden).map((tc, idx) => (
-                            <TableRow key={idx}>
-                                <TableCell>{idx + 1}</TableCell>
-                                <TableCell>
-                                                                    <pre
-                                                                        className="whitespace-pre-wrap text-xs">{tc.input}</pre>
-                                </TableCell>
-                                <TableCell>
-                                                                    <pre
-                                                                        className="whitespace-pre-wrap text-xs">{tc.expectedOutput}</pre>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {!problem.testCases?.filter((t) => !t.isHidden).length && (
-                            <TableRow>
-                                <TableCell colSpan={3}
-                                           className="text-muted-foreground text-sm">Không
-                                    có ví dụ mẫu</TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-
-            <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="hints">
-                    <AccordionTrigger className="text-sm">Gợi ý</AccordionTrigger>
-                    <AccordionContent>
-                        <ul className="list-disc pl-5 text-sm space-y-1">
-                            {problem.hints?.length ? (problem.hints.map((h, idx) => (
-                                <li key={idx}>{h.description}</li>
-                            ))) : (<li>Không có gợi ý</li>)}
-                        </ul>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
+        <Chatbot></Chatbot>
         </>
     );
 }

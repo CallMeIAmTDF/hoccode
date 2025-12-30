@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
-import Joyride, { Step, CallBackProps, STATUS } from 'react-joyride';
+import { useEffect, useRef } from 'react';
+import { driver, Driver, DriveStep } from "driver.js";
+import "driver.js/dist/driver.css";
 
 interface OnboardingTourProps {
     run: boolean;
-    steps: Step[];
+    steps: any[];
     onFinish: () => void;
 }
 
@@ -12,75 +13,50 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
                                                                   steps,
                                                                   onFinish,
                                                               }) => {
-    // Locale tiếng Việt
-    const locale = useMemo(() => ({
-        back: 'Quay lại',
-        close: 'Đóng',
-        last: 'Hoàn thành',
-        next: 'Tiếp theo',
-        skip: 'Bỏ qua',
-    }), []);
+    const driverObj = useRef<Driver | null>(null);
 
-    const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status } = data;
-        if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
-            onFinish();
+    useEffect(() => {
+        driverObj.current = driver({
+            showProgress: false,
+            allowClose: true,
+            overlayColor: 'rgba(0, 0, 0, 0.75)',
+            nextBtnText: 'Tiếp theo',
+            prevBtnText: 'Quay lại',
+            doneBtnText: 'Hoàn thành',
+            onDestroyStarted: () => {
+                onFinish();
+                driverObj.current?.destroy();
+            },
+            stageRadius: 12,
+        });
+    }, [onFinish]);
+
+    useEffect(() => {
+        if (run && driverObj.current) {
+            // Định nghĩa các giá trị hợp lệ cho side
+            const validSides = ["top", "bottom", "left", "right"];
+
+            const driverSteps: DriveStep[] = steps.map(step => {
+                // Xử lý placement từ Joyride sang Driver side
+                const rawSide = step.placement?.split('-')[0];
+                const sideValue = validSides.includes(rawSide) ? rawSide : "bottom";
+
+                return {
+                    element: step.target === 'body' ? undefined : step.target,
+                    popover: {
+                        title: step.title,
+                        description: step.content,
+                        // Ép kiểu (as any) hoặc (as "top" | ...) để thỏa mãn DriveStep
+                        side: sideValue as "top" | "bottom" | "left" | "right",
+                        align: 'start' as "start" | "center" | "end"
+                    }
+                };
+            });
+
+            driverObj.current.setSteps(driverSteps);
+            driverObj.current.drive();
         }
-    };
+    }, [run, steps]);
 
-    return (
-        <Joyride
-            steps={steps}
-            run={run}
-            continuous
-            showProgress={false}
-            showSkipButton
-            scrollToFirstStep
-            callback={handleJoyrideCallback}
-            locale={locale}
-            styles={{
-                options: {
-                    primaryColor: '#4f46e5',
-                    zIndex: 10000,
-                    backgroundColor: '#ffffff',
-                    textColor: '#1e293b',
-                    arrowColor: '#ffffff',
-                },
-                tooltip: {
-                    borderRadius: '12px',
-                    padding: '12px',
-                },
-                tooltipTitle: {
-                    fontWeight: 800,
-                    fontSize: '16px',
-                    color: '#4f46e5',
-                    marginBottom: '8px',
-                    textAlign: 'left',
-                },
-                tooltipContent: {
-                    padding: '0',
-                    fontSize: '14px',
-                    lineHeight: '1.6',
-                    textAlign: 'left',
-                },
-                buttonNext: {
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    padding: '8px 16px',
-                    fontSize: '13px',
-                    backgroundColor: '#4f46e5',
-                },
-                buttonBack: {
-                    marginRight: '12px',
-                    color: '#64748b',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                },
-                buttonSkip: {
-                    color: '#94a3b8',
-                    fontSize: '13px',
-                },
-            }}
-        />
-    );
+    return null;
 };

@@ -1,11 +1,12 @@
 // app/admin/layout.tsx
 'use client'
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Menu, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import {notify} from "@/components/notify";
+import {useSocket} from "@/context/SocketProvider";
 // Giả định Header là component toàn cục đã có sẵn
 // import Header from '@/components/Header';
 
@@ -14,6 +15,7 @@ interface AdminLayoutProps {
 }
 
 const AdminRootLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+    const { subscribe, isConnected } = useSocket();
     const handleLogout = () => {
         window.localStorage.clear();
         localStorage.setItem('hasSeenOnboarding', 'true');
@@ -25,6 +27,20 @@ const AdminRootLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             description: "Trở về trang đăng nhập"
         })
     }
+
+    useEffect(() => {
+        if(!isConnected) return;
+
+        const sub = subscribe(`/user/topic/admin`, (msg) => {
+            if (msg.type === "NEW_NOTIFICATION") {
+                notify("info", {
+                    title: "Thông báo",
+                    description: msg.message
+                })
+            }
+        });
+        return () => sub?.unsubscribe();
+    }, [subscribe, isConnected]);
 
     return (
         <div className="flex h-screen overflow-hidden bg-gray-50">

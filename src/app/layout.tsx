@@ -6,6 +6,7 @@ import {AuthProvider} from "@/lib/AuthProvider";
 import {SocketProvider} from "@/context/SocketProvider";
 import React from "react";
 import Script from "next/script";
+import ChatbotWrapper from "@/components/wrapper/ChatbotWrapper";
 import("@monaco-editor/react");
 const inter = Inter({ subsets: ['latin'] });
 
@@ -29,6 +30,7 @@ export default function RootLayout({
                     src="https://accounts.google.com/gsi/client"
                     strategy="afterInteractive"
                 />
+                <ChatbotWrapper />
             </SocketProvider>
         </AuthProvider>
 

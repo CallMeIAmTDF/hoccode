@@ -80,7 +80,9 @@ async function handleFetch<T>(fetchFn: () => Promise<Response>): Promise<T> {
             localStorage.clear();
             localStorage.setItem('hasSeenOnboarding', 'true');
             localStorage.setItem('hasSeenLearnProblemOnboarding', 'true')
-            window.location.href = "/auth/signin";
+            if(!(window.location.pathname == "/")){
+                window.location.href = "/auth/signin";
+            }
         } else {
             // notify("error", {
             //     title: "Lỗi hệ thống",
@@ -101,11 +103,13 @@ export function apiGet<T>(endpoint: string): Promise<T> {
 }
 
 export function apiPost<T, B = any>(endpoint: string, body?: B): Promise<T> {
+    const isFormData = body instanceof FormData;
+
     return handleFetch(() =>
         fetch(`${BASE_URL}${endpoint}`, {
             method: 'POST',
-            headers: getAuthHeaders(),
-            body: body ? JSON.stringify(body) : undefined,
+            headers: getAuthHeaders(isFormData ? 'form' : 'json'),
+            body: isFormData ? body : body ? JSON.stringify(body) : undefined,
         })
     );
 }

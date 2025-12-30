@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  next-app:
+    container_name: nextjs_web
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_WS_URL=http://localhost:8080/ws
+        - NEXT_PUBLIC_GOOGLE_CLIENT_ID=391255146342-mdm2kqf4afvr3je7850ku08qp2d6fcon.apps.googleusercontent.com
+        - NEXT_PUBLIC_API_URL=http://localhost:8080
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    restart: always

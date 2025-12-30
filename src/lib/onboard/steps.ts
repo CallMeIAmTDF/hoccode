@@ -1,6 +1,4 @@
-import {Step} from "react-joyride";
-
-export const learnPageSteps : Step[] = [
+export const learnPageSteps : any[] = [
     {
         target: 'body',
         placement: 'center',
@@ -40,7 +38,7 @@ export const learnPageSteps : Step[] = [
     },
 ]
 
-export const learnProblemPageSteps : Step[] = [
+export const learnProblemPageSteps : any[] = [
     {
         target: '#tour-problem-information',
         placement: 'right',
