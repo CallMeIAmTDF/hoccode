@@ -135,15 +135,22 @@ export default function NotificationDropdown() {
     useEffect(() => {
         if (!isConnected) return;
 
-        const sub = subscribe(`/user/topic/notification`, (msg) => {
-            console.log("RAW STOMP MESSAGE:", msg);
-            switch (msg.type){
+        const handleMessage = (msg: any) => {
+            // console.log("RAW STOMP MESSAGE:", msg);
+            switch (msg.type) {
                 case "NEW_NOTIFICATION":
-                    setUnreadCount(prevState => prevState + 1);
+                    setUnreadCount(prev => prev + 1);
                     break;
             }
-        });
-        return () => sub?.unsubscribe();
+        };
+
+        const subPrivate = subscribe('/user/topic/notification', handleMessage);
+        const subBroadcast = subscribe('/topic/notification', handleMessage);
+
+        return () => {
+            subPrivate?.unsubscribe();
+            subBroadcast?.unsubscribe();
+        };
     }, [subscribe, isConnected]);
 
     const availableTypes: TypeFilter[] = ["ALL", "CONTEST", "COMBAT", "PROBLEM", "SUBMISSION"];
