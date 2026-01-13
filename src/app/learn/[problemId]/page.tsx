@@ -402,24 +402,33 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
         }
     }
     const pollSubmission = async (submissionId: string) => {
-        const interval = setInterval(async () => {
+        let attempts = 0;
+
+
+        const poll = async () => {
+            attempts++;
+            if (attempts > 100) {
+                return;
+            }
             try {
                 const res = await apiGet<SubmissionResponse>(`/submission/${submissionId}/results`);
-                setSubmitOutput(res)
+                setSubmitOutput(res);
                 if (res.detail.status !== "IN_QUEUE") {
                     if (res.detail.status === "ACCEPTED") {
-                        setShowResultButton(true)
+                        setShowResultButton(true);
                     }
-                    clearInterval(interval);
+                } else {
+                    setTimeout(poll, 300);
                 }
             } catch (err: any) {
-                clearInterval(interval);
                 notify("error", {
                     title: "Có lỗi xảy ra",
-                    description: err?.message ?? "Lỗi hệ thống. Vui lòng thử lại"
-                })
+                    description: err?.message ?? "Lỗi hệ thống. Vui lòng thử lại",
+                });
             }
-        }, 300);
+        };
+
+        poll();
     };
     const handleLanguageChange = (lang: "java" | "cpp" | "python") => {
         setLanguage(lang)
@@ -631,7 +640,7 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
                                 </CardHeader>
 
                                 {/* Scrollable content */}
-                                <CardContent className="space-y-4 flex-1 overflow-y-auto pr-2">
+                                <CardContent className="space-y-4 flex-1 overflow-y-auto pr-2 no-scrollbar">
                                     {loading &&
                                         <div className="flex justify-center items-center w-full h-full"><Spinner/>
                                         </div>}
@@ -938,7 +947,8 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
                                                     onClick={() => setIsModalOpen(true)}
                                                     className="flex-shrink-0 flex items-center gap-1"
                                                 >
-                                                    <PlusCircle className="w-4 h-4"/> Thêm Mới
+                                                    {/*<PlusCircle className="w-4 h-4"/> */}
+                                                    Thêm Mới
                                                 </Button>
                                             </div>
                                         </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, {useEffect, useState} from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,20 @@ export default function ForgotPasswordClient() {
     const [password, setPassword] = useState("")
     const [repassword, setRepassword] = useState("")
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken");
+        if (token ) {
+            notify("info", {
+                title: "Đã đăng nhập",
+                description: "Chuyển về trang chủ...",
+                duration: 1500,
+            })
+            setTimeout(() => {
+                router.replace("/");
+            }, 100);
+        }
+    }, [router]);
 
     async function handleSendEmail(e: React.FormEvent) {
         e.preventDefault();

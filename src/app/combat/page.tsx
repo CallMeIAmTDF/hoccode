@@ -432,13 +432,13 @@ const BattlePage: React.FC<BattleProps> = ({onExit, problem, comp, roomId, submi
                     <Code className="w-6 h-6"/>
                     HocCodeArena
                 </h1>
-                <div className="flex items-center gap-4">
-                    <div className={`text-sm font-extrabold px-4 py-2 rounded-lg shadow-md flex items-center gap-2 ${
-                        timeLeft <= 60 && timeLeft > 0 ? 'bg-red-500 text-white animate-pulse' : 'bg-primary text-primary-foreground'
-                    }`}>
-                        <Clock className="w-5 h-5"/> {formatTime(timeLeft)}
-                    </div>
-                </div>
+                {/*<div className="flex items-center gap-4">*/}
+                {/*    <div className={`text-sm font-extrabold px-4 py-2 rounded-lg shadow-md flex items-center gap-2 ${*/}
+                {/*        timeLeft <= 60 && timeLeft > 0 ? 'bg-red-500 text-white animate-pulse' : 'bg-primary text-primary-foreground'*/}
+                {/*    }`}>*/}
+                {/*        <Clock className="w-5 h-5"/> {formatTime(timeLeft)}*/}
+                {/*    </div>*/}
+                {/*</div>*/}
             </div>
 
             {/* Main Content - Scrollable */}

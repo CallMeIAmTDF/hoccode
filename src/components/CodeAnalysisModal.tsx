@@ -227,11 +227,11 @@ export const CodeAnalysisModal: React.FC<CodeAnalysisModalProps> = ({open, onOpe
                         <TabsContent value="attempts" className={`pt-6 ${FIXED_CONTENT_HEIGHT}`}>
                             {totalAttempts > 0 ? (
                                 <div className="relative">
-                                    <Carousel className="w-full">
+                                    <Carousel className="w-full max-w-full overflow-hidden">
                                         <CarouselContent className="-ml-4">
                                             {attempts.map((attempt, index) => (
-                                                <CarouselItem key={index} className="pl-4 basis-full !max-w-full">
-                                                    <div className="p-1">
+                                                <CarouselItem key={index} className="pl-4 basis-full md:basis-full lg:basis-full">
+                                                    <div className="p-1 max-w-full">
                                                         <AttemptCard
                                                             attempt={attempt}
                                                             isBest={attempt.attempt_number === bestAttempt}

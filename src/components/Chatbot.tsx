@@ -8,6 +8,22 @@ const SUGGESTIONS = [
     "Lộ trình học tập cho người mới bắt đầu?"
 ];
 
+const SUGGESTION_ANSWERS: Record<string, string> = {
+    "Làm sao để cải thiện tư duy thuật toán?":
+        "Chào bạn nhé! Để giỏi thuật toán thì bí kíp chính là kiên trì đấy. Bạn hãy thử luyện bài tập mỗi ngày một chút, tập thói quen phân tích kỹ bài toán trên giấy trước khi đặt tay vào code, và đừng quên so sánh nhiều cách giải khác nhau để tìm ra phương án tối ưu nhất nha. Cố lên, mình tin bạn làm được!",
+
+    "Giải thích về độ phức tạp thời gian O(n)?":
+        "Câu hỏi rất hay! Bạn có thể hiểu đơn giản O(n) là độ phức tạp tuyến tính. Nghĩa là nếu dữ liệu đầu vào tăng lên bao nhiêu lần, thì thời gian chạy của chương trình cũng sẽ tăng lên bấy nhiêu. Giống như việc bạn phải đọc từng trang của một cuốn sách vậy, sách càng dày thì thời gian đọc xong sẽ càng lâu tương ứng đó!",
+
+    "Lộ trình học tập cho người mới bắt đầu?":
+        "Bắt đầu học lập trình sẽ rất thú vị nếu bạn có lộ trình rõ ràng nè. Đầu tiên, hãy chọn một ngôn ngữ cơ bản để nắm vững nền tảng, sau đó tìm hiểu về cấu trúc dữ liệu và thuật toán. Cuối cùng, đừng quên bắt tay vào làm những dự án nhỏ (mini project) để thấy thành quả của mình nhé. Mình luôn ở đây để hỗ trợ bạn!"
+};
+
+function getSuggestionAnswer(question: string): string {
+    return SUGGESTION_ANSWERS[question]
+        ?? "Mình sẽ giúp bạn giải thích chi tiết hơn nếu bạn muốn nhé!";
+}
+
 const COMMANDS = [
     {cmd: '/help', desc: 'Hiển thị hướng dẫn sử dụng', icon: <HelpCircle className="w-4 h-4"/>},
     {cmd: '/report', desc: 'Báo cáo lỗi (VD: /report Lỗi giao diện)', icon: <Flag className="w-4 h-4"/>},
@@ -106,13 +122,25 @@ export function Chatbot() {
     const handleSend = async (forcedMessage?: string) => {
         const textToSend = forcedMessage || input.trim();
         if (!textToSend || isTyping) return;
-
         setInput('');
         setShowCommands(false);
 
         if (textToSend.startsWith('/')) {
             const wasCommand = handleCommand(textToSend);
             if (wasCommand) return;
+        }
+
+        if (SUGGESTIONS.includes(textToSend)) {
+            setMessages(prev => [
+                ...prev,
+                { role: 'user', text: textToSend },
+                {
+                    role: 'bot',
+                    text: SUGGESTION_ANSWERS[textToSend]
+                        ?? "Mình sẽ giải thích chi tiết hơn nếu bạn hỏi sâu hơn nhé!"
+                }
+            ]);
+            return;
         }
 
         setMessages(prev => [...prev, {role: 'user', text: textToSend}]);
@@ -130,11 +158,27 @@ export function Chatbot() {
                 newMessages[newMessages.length - 1].text = message.answer;
                 return newMessages;
             });
-        } catch (error : any) {
-            console.error("Chat error:", error);
-            setMessages(prev => [...prev, {role: 'bot', text: 'Hệ thống đang bận một chút, bạn thử lại sau nhé!'}]);
-        } finally {
             setIsTyping(false);
+        } catch (error : any) {
+            if(error.message == "Truy cập quá nhanh"){
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1].text = "Truy cập quá nhanh, vui lòng thử lại sau";
+                    return newMessages;
+                });
+            }
+            else{
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1].text = "Hệ thống đang bận một chút, bạn thử lại sau nhé!";
+                    return newMessages;
+                });
+            }
+
+            setTimeout(() => {
+                setIsTyping(false);
+            }, 30000)
+        } finally {
         }
     };
 

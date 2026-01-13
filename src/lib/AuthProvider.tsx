@@ -26,7 +26,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
-        setIsLoggedIn(!!token);
+        const name = localStorage.getItem("name");
+        const email = localStorage.getItem("email");
+        setIsLoggedIn(!!token || !!name || !!email);
     }, []);
 
     return (

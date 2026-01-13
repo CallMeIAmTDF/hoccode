@@ -14,7 +14,7 @@ import {ApiCategory} from "@/lib/types/problem";
 import {AIAnalysis, DailySubmission, ProfileStats, Stats, StatsProps, UserStatsData} from "@/lib/types/profile";
 import {notify} from "@/components/notify";
 import {useRouter} from "next/navigation";
-import LeetCodeStats from "@/app/test/ProgressChart";
+import LeetCodeStats from "@/components/ProgressChart";
 import {Spinner} from "@/components/ui/shadcn-io/spinner";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 
@@ -28,7 +28,7 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import {Sidebar} from "@/components/sidebar";
-import UserStatsModal from "@/app/test2/UserStatsModal";
+import UserStatsModal from "@/components/UserStatsModal";
 import {AnalysisReportModal} from "@/components/AIAccountAnalysisModal";
 import {EditProfileModal} from "@/components/EditProfileModal";
 import {PremiumGateModal} from "@/components/PremiumGateModal";

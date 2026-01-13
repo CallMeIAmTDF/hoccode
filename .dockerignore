@@ -5,3 +5,7 @@ build
 .git
 .env*.local
 npm-debug.log*
+.gitignore
+.env*
+README.md
+*.log

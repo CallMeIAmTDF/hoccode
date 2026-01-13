@@ -117,6 +117,7 @@ export default function ContestPage() {
     const [search, setSearch] = useState("")
     const [tab, setTab] = useState("all")
     const [contests, setContests] = useState<Contest[]>([])
+    const [loading, setLoading] = useState<boolean>(true)
     const now = new Date()
     const router = useRouter();
 
@@ -129,6 +130,8 @@ export default function ContestPage() {
                 title: "Lỗi",
                 description: "Không tải được cuộc thi"
             })
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -194,7 +197,7 @@ export default function ContestPage() {
                 {/* Danh sách contest */}
                 <div className="flex-1 overflow-y-auto scrollbar-hide pr-2">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {contests.length === 0 ? (
+                        {loading ? (
                             <div className="flex justify-center items-center w-full h-full col-span-full">
                                 <Spinner/>
                             </div>

@@ -77,13 +77,14 @@ export default function PaymentConfirmModal({
 
     return (
         <Dialog open={isShowPaymentModal} onOpenChange={(open) => !open && onClose()}>
-            <DialogHeader>
-                <DialogTitle>Chi tiết thanh toán</DialogTitle>
-            </DialogHeader>
+
             <DialogContent className={cn(
                 "p-0 overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-white",
                 modalWidth
             )}>
+                {/*<DialogHeader>*/}
+                {/*    <DialogTitle>Chi tiết thanh toán</DialogTitle>*/}
+                {/*</DialogHeader>*/}
                 {/* Close button is provided by DialogContent usually, but if you want custom styling, keep it inside or use the default */}
 
                 {loadingData ? (

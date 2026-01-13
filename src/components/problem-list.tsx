@@ -6,11 +6,12 @@ import {
     Clock,
     MemoryStick,
     CalendarCheck2,
-    CalendarX2, Check
+    CalendarX2, Check, ChevronLeft, ChevronRight
 } from "lucide-react"
 import { ProblemFilters } from "@/components/problem-filters"
-import React from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {FilterState, Problem} from "@/lib/types/problem";
+import {Button} from "@/components/ui/button";
 
 export interface ProblemListProps {
     problems: Problem[]
@@ -48,7 +49,21 @@ const getCategoryColor = (category: string) => {
 }
 
 export function ProblemList({ problems, dailyProblem, dailyProblemId, filters, onFiltersChange, onProblemClick, onRandom }: ProblemListProps) {
-    const otherProblems = problems.filter(p => p.id !== dailyProblemId)
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 12;
+
+    const otherProblems = useMemo(() => problems.filter(p => p.id !== dailyProblemId), [problems, dailyProblemId]);
+
+    // Reset về trang 1 khi filter thay đổi
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
+    const totalPages = Math.ceil(otherProblems.length / itemsPerPage);
+    const paginatedProblems = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return otherProblems.slice(start, start + itemsPerPage);
+    }, [otherProblems, currentPage]);
 
     return (
         <div className="space-y-4">
@@ -67,61 +82,67 @@ export function ProblemList({ problems, dailyProblem, dailyProblemId, filters, o
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow
-                            key={dailyProblem.id}
-                            id="tour-daily"
-                            className="hover:bg-muted/50 cursor-pointer"
-                            onClick={() => onProblemClick(dailyProblem.id)}
-                        >
-                            <TableCell>
-                                <div className="flex items-center gap-2">
-                                    {dailyProblem.accepted ? (
-                                        <CalendarCheck2 className="h-4 w-4"/>
-                                    ) : (
-                                        <CalendarX2 className="h-4 w-4"/>
-                                    )}
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <div
-                                    className="font-medium text-foreground hover:text-blue-700">{dailyProblem.title}</div>
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant="secondary" className={getDifficultyColor(dailyProblem.difficulty)}>
-                                    {dailyProblem.difficulty}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex flex-wrap gap-1">
-                                    {dailyProblem.categories.slice(0, 1).map((category) => (
-                                        <Badge key={category} variant="outline" className={`text-xs ${getCategoryColor(category)}`}>
-                                            {category.replaceAll("_", " ")}
-                                        </Badge>
-                                    ))}
-                                    {dailyProblem.categories.length > 1 && (
-                                        <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
-                                            +{dailyProblem.categories.length - 1}
-                                        </Badge>
-                                    )}
-                                </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                                <span className="font-medium text-blue-700">{dailyProblem.point}</span>
-                            </TableCell>
-                            <TableCell className="text-center">
-                                <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-                                    <div className="flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {dailyProblem.timeLimit}s
+                        {/* Daily Problem luôn hiển thị ở mọi page */}
+                        {dailyProblem && (
+                            <TableRow
+                                key={dailyProblem.id}
+                                id="tour-daily"
+                                className="hover:bg-muted/50 cursor-pointer bg-blue-50/30 border-b-2 border-blue-100"
+                                onClick={() => onProblemClick(dailyProblem.id)}
+                            >
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        {dailyProblem.accepted ? (
+                                            <CalendarCheck2 className="h-4 w-4 text-green-600"/>
+                                        ) : (
+                                            <CalendarX2 className="h-4 w-4 text-slate-400"/>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        <MemoryStick className="h-3 w-3" />
-                                        {dailyProblem.memoryLimit}KB
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <div className="font-medium text-foreground hover:text-blue-700">{dailyProblem.title}</div>
+                                        <Badge className="bg-indigo-600 text-white text-[10px] px-1.5 py-0">Daily</Badge>
                                     </div>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                        {otherProblems.map((problem) => {
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="secondary" className={getDifficultyColor(dailyProblem.difficulty)}>
+                                        {dailyProblem.difficulty}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex flex-wrap gap-1">
+                                        {dailyProblem.categories.slice(0, 1).map((category) => (
+                                            <Badge key={category} variant="outline" className={`text-xs ${getCategoryColor(category)}`}>
+                                                {category.replaceAll("_", " ")}
+                                            </Badge>
+                                        ))}
+                                        {dailyProblem.categories.length > 1 && (
+                                            <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
+                                                +{dailyProblem.categories.length - 1}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <span className="font-medium text-blue-700">{dailyProblem.point}</span>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+                                        <div className="flex items-center gap-1">
+                                            <Clock className="h-3 w-3" />
+                                            {dailyProblem.timeLimit}s
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <MemoryStick className="h-3 w-3" />
+                                            {dailyProblem.memoryLimit}KB
+                                        </div>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+
+                        {paginatedProblems.map((problem) => {
                             return (
                                 <TableRow
                                     key={problem.id}
@@ -180,6 +201,35 @@ export function ProblemList({ problems, dailyProblem, dailyProblemId, filters, o
                         })}
                     </TableBody>
                 </Table>
+
+                {/* Phân trang Footer */}
+                {totalPages > 0 && (
+                    <div className="flex items-center justify-between px-4 py-3 bg-slate-50/50 border-t">
+                        <div className="text-xs text-muted-foreground font-medium">
+                            Trang {currentPage} / {totalPages} (Tổng {otherProblems.length} bài tập)
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            >
+                                <ChevronLeft className="h-4 w-4 mr-1" /> Trước
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            >
+                                Sau <ChevronRight className="h-4 w-4 ml-1" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {problems.length === 0 && !dailyProblem && (

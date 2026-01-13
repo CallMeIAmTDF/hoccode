@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
     images: {
         unoptimized: true
     },
+    compress: true,
+    poweredByHeader: false,
+    experimental: {
+        optimizePackageImports: ['lodash', 'date-fns'],
+    },
     webpack(config) {
         config.ignoreWarnings = [
             {

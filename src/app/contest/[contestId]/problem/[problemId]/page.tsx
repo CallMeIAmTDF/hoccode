@@ -149,13 +149,46 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
         }
     }
 
+    // const pollSubmission = async (submissionId: string) => {
+    //     const interval = setInterval(async () => {
+    //         try {
+    //             const res = await apiGet<SubmissionResponse>(`/submission/${submissionId}/results`);
+    //             setSubmitOutput(res)
+    //             if (res.detail.status !== "IN_QUEUE") {
+    //                 clearInterval(interval);
+    //                 if(res.detail.status === "ACCEPTED"){
+    //                     notify("success", {
+    //                         title: "Thông báo",
+    //                         description: "Bài làm đã vượt qua bộ kiểm thử"
+    //                     })
+    //                 }else{
+    //                     notify("error", {
+    //                         title: "Thông báo",
+    //                         description: "Bài làm chưa vượt qua bộ kiểm thử"
+    //                     })
+    //                 }
+    //             }
+    //         } catch (err: any) {
+    //             clearInterval(interval);
+    //             notify("error", {
+    //                 title: "Có lỗi xảy ra",
+    //                 description: err?.message ?? "Lỗi hệ thống. Vui lòng thử lại"
+    //             })
+    //         }
+    //     }, 300);
+    // };
+
     const pollSubmission = async (submissionId: string) => {
-        const interval = setInterval(async () => {
+        let attempts = 0;
+        const poll = async () => {
+            attempts++;
+            if (attempts > 100) {
+                return;
+            }
             try {
                 const res = await apiGet<SubmissionResponse>(`/submission/${submissionId}/results`);
                 setSubmitOutput(res)
                 if (res.detail.status !== "IN_QUEUE") {
-                    clearInterval(interval);
                     if(res.detail.status === "ACCEPTED"){
                         notify("success", {
                             title: "Thông báo",
@@ -167,15 +200,18 @@ export default function LearnProblemPage({params}: { params: Promise<{ problemId
                             description: "Bài làm chưa vượt qua bộ kiểm thử"
                         })
                     }
+                }else{
+                    setTimeout(poll, 300);
                 }
             } catch (err: any) {
-                clearInterval(interval);
                 notify("error", {
                     title: "Có lỗi xảy ra",
                     description: err?.message ?? "Lỗi hệ thống. Vui lòng thử lại"
                 })
             }
-        }, 300);
+        };
+
+        poll();
     };
 
 

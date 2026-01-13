@@ -51,15 +51,15 @@ const SolutionModal: React.FC<SolutionModalProps> = ({ isOpen, onClose, solution
         // ... (Modal rỗng giữ nguyên) ...
         return (
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="sm:max-w-[800px] max-w-[95vw] p-4">
+                <DialogContent className="sm:max-w-[800px] min-h-[60vh] min-w-[60vw] max-w-[95vw] p-4">
                     <DialogHeader>
                         <DialogTitle className="flex items-center">
                             <CodeIcon className="w-5 h-5 mr-2" />
-                            Sample Solutions
+                            Bài giải mẫu
                         </DialogTitle>
                     </DialogHeader>
                     <div className="text-center text-gray-500">
-                        Không có solution mẫu nào được cung cấp.
+                        Không có bài giải mẫu nào được cung cấp.
                     </div>
                 </DialogContent>
             </Dialog>
