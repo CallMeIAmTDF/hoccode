@@ -2,7 +2,8 @@ name: Build and Deploy Frontend
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
+
 
 jobs:
   build-and-push:
