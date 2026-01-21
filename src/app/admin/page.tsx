@@ -179,7 +179,7 @@ const PieChartMock: React.FC<PieChartMockProps> = ({ data }) => {
                                 {item.text}
                             </div>
                             <span className="font-semibold text-gray-700">
-                                {Math.round((item.count / total) * 100)}% ({item.count})
+                                {total > 0 ? Math.round((item.count / total) * 100) : 0}% ({item.count})
                             </span>
                         </div>
                     ))}
